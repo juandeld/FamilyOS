@@ -1,0 +1,8 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {recipes,profiles,meals,shopping,slot} from '../lib/domain';
+test('each profile can choose ten proposals per meal independently',()=>{for(const p of profiles)for(const m of meals)assert.equal(recipes.filter(r=>r.meal===m).length,10);const plan={[slot('Juan','Lunes','Almuerzo')]:'1-0',[slot('Pamela','Lunes','Almuerzo')]:'1-1'};assert.equal(Object.keys(plan).length,2);assert.notEqual(plan[slot('Juan','Lunes','Almuerzo')],plan[slot('Pamela','Lunes','Almuerzo')]);});
+test('shopping aggregates all selected portions and replaces changed meals',()=>{const plan={[slot('Juan','Lunes','Desayuno')]:'0-0',[slot('Manuela','Lunes','Desayuno')]:'0-0'};assert.equal(shopping(plan).Huevos.quantity,4);plan[slot('Juan','Lunes','Desayuno')]='1-0';assert.equal(shopping(plan).Huevos.quantity,2);assert.equal(shopping(plan).Pollo.quantity,180);assert.deepEqual(shopping({}),{});});
+test('all recipes have actionable quantities and instructions',()=>{for(const r of recipes){assert.ok(r.ingredients.length);assert.ok(r.steps.length>=3);for(const i of r.ingredients)assert.ok(i.quantity>0);}});
+import {rankedRecipes,initial} from '../lib/domain';
+test('preferences and person-specific feedback change suggestion order',()=>{const lunches=recipes.filter(r=>r.meal==='Almuerzo');assert.equal(rankedRecipes(lunches,'Juan','quinoa',[])[0].name,'Bowl de quinoa');const history=[{id:'x',name:'Bowl de quinoa',person:'Juan',feedback:'Me encantó',date:'demo'}];assert.equal(rankedRecipes(lunches,'Juan','',history)[0].name,'Bowl de quinoa');assert.equal(rankedRecipes(lunches,'Pamela','',history)[0].name,'Pollo al limón');assert.deepEqual(initial.favorites,[]);assert.deepEqual(initial.history,[]);});
