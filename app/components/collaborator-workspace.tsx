@@ -117,7 +117,7 @@ export default function CollaboratorWorkspace() {
         </a>
         <button
           className="text-button"
-          onClick={() => browserSupabase().auth.signOut()}
+          onClick={() => browserSupabase().auth.signOut({ scope: "local" })}
         >
           <LogOut size={16} />
           Cerrar sesión

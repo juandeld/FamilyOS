@@ -22,6 +22,7 @@ async function main() {
   const clients = await Promise.all(
     names.map(async (name) => {
       const client = createClient(url!, key!, {
+        db: { schema: process.env.NEXT_PUBLIC_SUPABASE_DB_SCHEMA || "public" },
         auth: { persistSession: false, autoRefreshToken: false },
       });
       const { data, error } = await client.auth.signInWithPassword({

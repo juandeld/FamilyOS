@@ -46,7 +46,9 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
+  const schema = process.env.NEXT_PUBLIC_SUPABASE_DB_SCHEMA || "public";
   const userClient = createClient(url, anon, {
+    db: { schema },
     global: { headers: { Authorization: authorization } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
@@ -85,6 +87,7 @@ export async function POST(request: NextRequest) {
       { status: 409 },
     );
   const service = createClient(url, secret, {
+    db: { schema },
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const { error: deliveryError } = await service.auth.admin.inviteUserByEmail(

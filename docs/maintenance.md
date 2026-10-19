@@ -32,4 +32,6 @@ Para un **proyecto FamilyOS ya instalado**, aplica únicamente `supabase/migrati
 
 ## Situación de la conexión
 
-El proyecto Supabase previamente conectado pertenece a otra aplicación, según confirmó el usuario. Se retiraron únicamente las variables de esa conexión en el proyecto Vercel de FamilyOS. La otra base no se modificó. FamilyOS necesita su propio proyecto y las variables documentadas en `docs/supabase-vercel.md` para habilitar cuentas privadas y sincronización. Mientras tanto, el módulo se puede probar con datos ficticios locales; el archivo familiar queda preparado fuera del repositorio para una importación privada posterior.
+El propietario autorizó instalar FamilyOS dentro del proyecto Supabase existente para evitar el límite de dos proyectos gratuitos. FamilyOS usa el esquema `familyos` y conserva las tablas y políticas de la otra aplicación. El servicio de Auth es compartido; consulta las implicaciones y la instalación en `docs/supabase-vercel.md`. La demo sigue usando ejemplos ficticios locales. El archivo familiar se importa únicamente al estado privado del hogar, con observaciones y borradores conservados.
+
+En esta instalación compartida no ejecutes directamente una migración con nombres `public.`: las siguientes actualizaciones deben dirigirse al esquema `familyos`. `supabase/shared-setup.sql` es el bundle inicial y no debe repetirse sobre una instalación existente.

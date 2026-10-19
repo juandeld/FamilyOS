@@ -125,7 +125,7 @@ export default function AccessGate({ children }: { children: ReactNode }) {
         </button>
         <button
           className="text-button"
-          onClick={() => browserSupabase().auth.signOut()}
+          onClick={() => browserSupabase().auth.signOut({ scope: "local" })}
         >
           Cerrar sesión
         </button>

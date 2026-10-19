@@ -1,12 +1,12 @@
 # Activar FamilyOS privado en Supabase y Vercel
 
-El código ya contiene autenticación, autorización PostgreSQL, sincronización y administración de colaboradores. **No está conectado a un proyecto Supabase en este entorno**. Las pruebas locales no prueban SMTP, enlaces reales de correo ni conectividad de Vercel a tu proyecto. La aplicación publicada conserva la demo hasta que añadas las variables públicas y vuelvas a desplegar.
+El código ya contiene autenticación, autorización PostgreSQL, sincronización y administración de colaboradores. Admite un proyecto exclusivo o, con autorización del propietario, un proyecto compartido usando el esquema aislado `familyos`. Las pruebas locales no sustituyen la verificación de Auth, correo y sincronización alojados. La demo pública sigue separada en `/demo`.
 
 No necesitas compartir contraseñas ni claves por chat ni agregarlas a GitHub.
 
 ## 1. Crear un proyecto Supabase
 
-Abre [Supabase](https://supabase.com/dashboard) y crea un proyecto de producción exclusivo de FamilyOS. No uses el proyecto de otra aplicación. Conserva la contraseña de PostgreSQL en tu gestor de contraseñas; la app no necesita esa contraseña en Vercel.
+Para una instalación independiente, abre [Supabase](https://supabase.com/dashboard) y crea un proyecto de producción exclusivo de FamilyOS. Para compartir un proyecto existente, sigue la sección «Proyecto compartido» al final; no instales las tablas de FamilyOS en el esquema `public` de la otra aplicación. Conserva la contraseña de PostgreSQL en tu gestor de contraseñas; la app no necesita esa contraseña en Vercel.
 
 En Project Settings → API/Data API confirma que `public` está entre los esquemas expuestos. No expongas `auth` ni `pg_catalog`. Obtén la **Project URL**, la clave pública **anon** (o publishable equivalente) y la clave **service_role** desde la sección de claves API. La pública sirve para el navegador con RLS; la service_role solo se usa en el servidor para enviar invitaciones.
 
@@ -75,6 +75,7 @@ Abre [Vercel → proyectos](https://vercel.com/dashboard), selecciona el proyect
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Project URL de Supabase | Navegador y servidor |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clave pública anon/publishable | Navegador; siempre sujeto a RLS |
+| `NEXT_PUBLIC_SUPABASE_DB_SCHEMA` | `public` en instalación exclusiva o `familyos` en proyecto compartido | Selección del esquema de datos |
 | `NEXT_PUBLIC_APP_URL` | `https://family-os-liard-six.vercel.app` | Origen autorizado y enlaces de invitación |
 | `SUPABASE_SERVICE_ROLE_KEY` | Clave service_role | **Solo servidor**, API de invitaciones |
 
@@ -151,3 +152,27 @@ Los objetivos nutricionales viven en el estado privado de administradores. Los e
 El estado administrativo se guarda de forma progresiva en un documento JSONB por hogar con revisión atómica; las operaciones de colaboradores están limitadas a RPCs específicos. Esto conserva los módulos actuales sin reescribirlos. La normalización futura de recetas familiares, stock y tareas podrá hacerse por etapas. No hay sincronización offline ni colaboración simultánea dentro del mismo campo como un editor de documentos. La auditoría registra cambios y lecturas médicas; no copia contenido privado en los logs.
 
 WhatsApp e IA siguen sin conectarse. Las capturas simuladas continúan etiquetadas; ninguna nota dispara mensajes, compras o acciones externas.
+
+
+## Proyecto compartido (instalación autorizada)
+
+FamilyOS puede coexistir con otra aplicación dentro del mismo proyecto gratuito. **Esto separa las tablas y la autorización del hogar, pero no crea otro servicio de Auth:** comparten identidades, contraseñas, correo, cuotas y configuración global. Un usuario de la otra aplicación no obtiene acceso a FamilyOS sin membresía activa. Las políticas de la otra aplicación siguen determinando qué recursos de ella puede leer una identidad autenticada; no se promete aislamiento completo entre servicios independientes.
+
+1. Revisa tablas, políticas, funciones y triggers de la aplicación existente antes de cualquier instalación. Conserva una referencia de sus objetos, permisos y datos existentes.
+2. En un proyecto sin esquema `familyos`, aplica **solo `supabase/shared-setup.sql`**, una vez. Se genera mediante `npm run supabase:bundle` a partir de las mismas migraciones probadas. Crea diez tablas con RLS y funciones fijadas a `familyos,pg_temp`; conserva el rol PostgreSQL `PUBLIC` en las revocaciones. No instala objetos de FamilyOS en `public`, no reemplaza funciones existentes y no aplica la revocación global de creación sobre `public`.
+3. Agrega `familyos` a los esquemas expuestos de PostgREST, **preservando todos los existentes**. No concedas uso del esquema a `anon`, ni permisos de escritura directa a `authenticated`.
+4. Configura `NEXT_PUBLIC_SUPABASE_DB_SCHEMA=familyos` en Vercel junto con las claves del proyecto compartido y vuelve a desplegar. El navegador, la API de invitaciones y el verificador usan ese mismo esquema. Las sesiones del navegador tienen una clave propia de FamilyOS y los cierres de sesión usan `scope: local`.
+5. Conserva la configuración global de Auth de la otra aplicación, incluidos registro, contraseñas, plantillas, Site URL y triggers. Si faltan redirecciones de FamilyOS, agrégalas sin quitar las existentes. La app de FamilyOS no ofrece registro público y exige membresía; si el proyecto compartido permite crear identidades públicas para la otra app, esas identidades no tendrán acceso a los datos de FamilyOS. Si las plantillas/redirecciones actuales son incompatibles, se requiere adaptar el flujo sin romper la otra app.
+6. La creación de un usuario Auth puede activar triggers existentes de perfiles de la otra aplicación. Se revisan y se preservan; esto puede generar un perfil vacío propio de esa identidad, pero no debe alterar registros de usuarios anteriores. Cambiar la contraseña de una identidad compartida afecta su acceso a ambas aplicaciones.
+
+### Juan primero, Pamela después
+
+No inventes un correo o usuario para Pamela. Cuando solo Juan esté invitado, realiza desde el servicio administrativo una transacción de bootstrap: comprueba su correo Auth exacto y que no tenga ya un hogar principal, crea un hogar, una membresía administrativa principal para Juan y los cuatro perfiles familiares. Pamela y los niños quedan con `user_id=null`. Inicializa con `emptyHouseholdState()` para no copiar datos ficticios de la demo. La función original `bootstrap_household` sigue disponible para instalaciones con dos usuarios reales y distintos; no la llames con un correo falso o repetido.
+
+Cuando se disponga del correo de Pamela, invita su cuenta real y vincúlala al mismo hogar desde una operación administrativa verificada con `role=admin,is_principal=true`; enlaza su perfil familiar. Las invitaciones normales de colaboradores no elevan a administradores. No crees cuentas para los niños. Los clientes no tienen acceso a funciones de bootstrap.
+
+Para importar mantenimiento, valida `maintenance-import.json` con `parseMaintenanceImport` y guarda el plan únicamente en el estado privado del hogar. Conserva borradores y observaciones; no inventes historial ni fechas de ejecución.
+
+### Verificación de coexistencia
+
+`tests/shared-schema.test.ts` instala el bundle sobre tablas/funciones `public` preexistentes y comprueba que permanezcan intactas, incluida su configuración de RLS/ACL. Prueba dos administradores sincronizados, conflictos de revisión, privacidad de cocina, usuarios de la otra app, otro hogar y anónimos, y colisiones deliberadas de nombres en `public`. Las pruebas de navegador de Auth exigen cabeceras `Accept-Profile`/`Content-Profile: familyos` y cierre de sesión local. Las comprobaciones alojadas deben usar datos ficticios temporales y eliminarlos al terminar, sin enviar correos a personas de prueba.

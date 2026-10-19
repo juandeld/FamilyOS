@@ -20,6 +20,7 @@ export default defineConfig({
     env: {
       FAMILYOS_BUILD_DIR: ".next-auth-test",
       NEXT_PUBLIC_SUPABASE_URL: "https://familyos-test.supabase.co",
+      NEXT_PUBLIC_SUPABASE_DB_SCHEMA: "familyos",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "public-local-test-fixture",
       SUPABASE_SERVICE_ROLE_KEY: "server-local-test-fixture",
       NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3001",

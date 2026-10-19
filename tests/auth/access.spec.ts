@@ -75,6 +75,11 @@ async function fixture(
       const request = route.request(),
         url = new URL(request.url()),
         auth = request.headers().authorization || "";
+      if (url.pathname.startsWith("/rest/v1/")) {
+        const profile = ["GET", "HEAD"].includes(request.method())
+          ? "accept-profile" : "content-profile";
+        expect(request.headers()[profile]).toBe("familyos");
+      }
       let id = users[0].id;
       try {
         id =
@@ -97,8 +102,10 @@ async function fixture(
         return send(
           request.method() === "PUT" ? { user: authUser(id) } : authUser(id),
         );
-      if (url.pathname === "/auth/v1/logout")
+      if (url.pathname === "/auth/v1/logout") {
+        expect(url.searchParams.get("scope")).toBe("local");
         return route.fulfill({ status: 204 });
+      }
       if (url.pathname === "/auth/v1/recover") return send({});
       if (url.pathname === "/auth/v1/verify") return send(session(id));
       if (url.pathname === "/rest/v1/rpc/accept_my_invitations") return send(0);

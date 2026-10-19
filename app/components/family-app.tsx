@@ -402,7 +402,7 @@ export default function FamilyApp() {
                         "Hay cambios sin guardar. ¿Cerrar sesión y descartarlos?",
                       )
                     )
-                      browserSupabase().auth.signOut();
+                      browserSupabase().auth.signOut({ scope: "local" });
                   }}
                 >
                   Cerrar sesión
