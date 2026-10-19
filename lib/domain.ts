@@ -1,3 +1,5 @@
+import type {StockMovement} from './pantry';
+import type {Preparation} from './meat-shopping';
 import {details} from './catalog';
 export type Profile = 'Juan'|'Pamela'|'Manuela'|'Juan de Dios';
 export const profiles: Profile[]=['Juan','Pamela','Manuela','Juan de Dios'];
@@ -8,7 +10,7 @@ export const recipes=titles.flatMap((group,m)=>group.map((name,i)=>({id:`${m}-${
 export type Plan=Record<string,string>;
 export const slot=(p:string,d:string,m:string)=>`${p}|${d}|${m}`;
 export function shopping(plan:Plan){const result:Record<string,{quantity:number,unit:string}>={};Object.values(plan).forEach(id=>{recipes.find(r=>r.id===id)?.ingredients.forEach(i=>{result[i.name]??={quantity:0,unit:i.unit};result[i.name].quantity+=i.quantity;});});return result;}
-export const initial={plan:{} as Plan,favorites:[] as string[],history:[] as {id:string;name:string;person:string;date:string;feedback:string}[],goals:{Juan:{kcal:2200,protein:150,carbs:240,fat:70},Pamela:{kcal:1800,protein:110,carbs:200,fat:60}},staff:[{id:'s1',name:'Rosa López',role:'Cocina',note:'Prefiere recibir el menú la tarde anterior. Ingreso: enero 2024.'},{id:'s2',name:'Carlos Pérez',role:'Jardín y mantenimiento',note:'Uniforme entregado en septiembre.'}],tasks:[{id:'t1',title:'Preparar almuerzo familiar',owner:'Rosa López',frequency:'Diaria',done:false},{id:'t2',title:'Revisar filtro de aire acondicionado',owner:'Carlos Pérez',frequency:'Mensual · propuesta sin manual verificado',done:false}],assets:[{id:'a1',name:'Aire acondicionado · sala',detail:'Marca y modelo pendientes de verificar. No hay manual cargado.'}],preferences:{Juan:"",Pamela:"",Manuela:"","Juan de Dios":""} as Record<Profile,string>,checkedItems:[] as string[],notes:[] as string[]};
+export const initial={plan:{} as Plan,favorites:[] as string[],history:[] as Preparation[],goals:{Juan:{kcal:2200,protein:150,carbs:240,fat:70},Pamela:{kcal:1800,protein:110,carbs:200,fat:60}},staff:[{id:'s1',name:'Rosa López',role:'Cocina',note:'Prefiere recibir el menú la tarde anterior. Ingreso: enero 2024.'},{id:'s2',name:'Carlos Pérez',role:'Jardín y mantenimiento',note:'Uniforme entregado en septiembre.'}],tasks:[{id:'t1',title:'Preparar almuerzo familiar',owner:'Rosa López',frequency:'Diaria',done:false},{id:'t2',title:'Revisar filtro de aire acondicionado',owner:'Carlos Pérez',frequency:'Mensual · propuesta sin manual verificado',done:false}],assets:[{id:'a1',name:'Aire acondicionado · sala',detail:'Marca y modelo pendientes de verificar. No hay manual cargado.'}],preferences:{Juan:"",Pamela:"",Manuela:"","Juan de Dios":""} as Record<Profile,string>,stockMovements:[] as StockMovement[],purchasePeriod:10 as 10|15|30,checkedItems:[] as string[],notes:[] as string[]};
 export type State=typeof initial;
 export function rankedRecipes(list:typeof recipes,person:Profile,preferences:string,history:State['history']){
  const normalize=(s:string)=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');

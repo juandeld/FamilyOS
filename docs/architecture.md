@@ -31,3 +31,12 @@ IA, correo, calendario y proveedores deben ser adaptadores independientes detrá
 3. Recetas y nutrición verificadas, disponibilidad confirmada y planificación multisemana.
 4. Voz, OCR y WhatsApp con aprobación e idempotencia.
 5. Módulos restantes según prioridad; salud solo después de pruebas específicas de privacidad.
+
+
+## Vertical implementada: proyección y movimientos locales
+
+`lib/meat-shopping.ts` proyecta por frecuencia de recetas preparadas por persona/tiempo y ajusta porciones teóricas de adultos con una aproximación proporcional de cuatro macros. Períodos de 10/15/30 días, margen fijo 15 %, datos incompletos explícitos. Conserva pesos escurridos separados de crudos y expone fuentes por receta/persona. Los macros de demo no son datos nutricionales verificados.
+
+`lib/pantry.ts` utiliza movimientos aditivos: opening, purchase, preparation, correction. El primer conteo es la línea base por producto/unidad; eventos anteriores no se reaplican. El saldo desconocido es null y un saldo negativo se conserva para conciliación. La receta confirmada guarda snapshot e id; sus descuentos se agregan con el historial en una actualización funcional del estado. Los IDs de movimiento y de preparación permiten deduplicar el mismo evento. Las metas y pronósticos no modifican los consumos reales del historial.
+
+En producción, guardar historial y movimientos dentro de una transacción PostgreSQL, con restricciones únicas por evento/ingrediente, autorización y control de concurrencia. `localStorage` no ofrece garantías entre pestañas o usuarios; no representa una implementación transaccional multiusuario. Una receta antigua sin snapshot no permite reconstruir con certeza sus cantidades pasadas; la demo no crea descuentos retroactivos. El OCR/voz debe proponer movimientos, no confirmarlos sin revisión.
