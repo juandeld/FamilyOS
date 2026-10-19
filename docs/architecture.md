@@ -1,6 +1,6 @@
-# Arquitectura propuesta para producción
+# Arquitectura de FamilyOS
 
-La demo actual es local y carece de garantías multiusuario. La migración a Supabase exige diseñar y probar el servidor antes de introducir datos reales.
+La demo `/demo` sigue siendo local y no ofrece garantías multiusuario. El modo privado ya utiliza Supabase Auth, PostgreSQL con RLS y RPCs autorizados. La configuración externa se describe en `supabase-vercel.md`; Supabase alojado y SMTP aún requieren validación. Las secciones de evolución describen los módulos pendientes, no funciones ya conectadas.
 
 ## Modelo y límites
 
@@ -40,3 +40,16 @@ IA, correo, calendario y proveedores deben ser adaptadores independientes detrá
 `lib/pantry.ts` utiliza movimientos aditivos: opening, purchase, preparation, correction. El primer conteo es la línea base por producto/unidad; eventos anteriores no se reaplican. El saldo desconocido es null y un saldo negativo se conserva para conciliación. La receta confirmada guarda snapshot e id; sus descuentos se agregan con el historial en una actualización funcional del estado. Los IDs de movimiento y de preparación permiten deduplicar el mismo evento. Las metas y pronósticos no modifican los consumos reales del historial.
 
 En producción, guardar historial y movimientos dentro de una transacción PostgreSQL, con restricciones únicas por evento/ingrediente, autorización y control de concurrencia. `localStorage` no ofrece garantías entre pestañas o usuarios; no representa una implementación transaccional multiusuario. Una receta antigua sin snapshot no permite reconstruir con certeza sus cantidades pasadas; la demo no crea descuentos retroactivos. El OCR/voz debe proponer movimientos, no confirmarlos sin revisión.
+
+
+## Fase multiusuario implementada
+
+El diseño anterior se conserva en `app/components/family-app.tsx`. `AccessGate` valida usuario con Supabase Auth, acepta únicamente invitaciones de correo confirmado y obtiene membresías activas. Juan y Pamela son principales iguales. Los perfiles infantiles no se vinculan a Auth. `UserManagement` envía invitaciones mediante una ruta de servidor que verifica el JWT con `getUser`, confirma membresía administrativa y usa service_role exclusivamente para Auth Admin y estado de entrega. No hay registro público en la UI; deshabilitarlo en Supabase es parte necesaria de la configuración.
+
+`household_state` contiene progresivamente el estado administrativo por hogar. RLS permite lectura solo a sus administradores; los clientes no tienen escritura directa. `save_household_state` verifica rol y revisión, cambia el documento y agrega auditoría. La app consulta cada 4 segundos, combina cambios en bloques distintos y muestra conflictos en el mismo bloque. No persiste datos privados ni colas offline en localStorage. El token de sesión sí se conserva mediante el SDK; cerrar sesión desmonta el hogar. La demo usa otra ruta y mantiene su almacenamiento anterior, sin importación automática al hogar real.
+
+Los colaboradores no reciben el documento administrativo. `get_collaborator_workspace` entrega una proyección por permisos: cocina sin macros ni notas privadas; tareas solo donde `assigneeId` coincide con su identidad; activos cuando están autorizados; despensa operativa sin notas. Confirmar una preparación, registrar stock, completar una tarea o editar un activo son funciones específicas que vuelven a comprobar permisos y bloquean la fila durante la transacción. La protección no depende de la UI. La desactivación y los cambios de permisos son efectivos en la siguiente petición, aun con el token vigente.
+
+Registros médicos y autorizaciones por persona están separados; ser administrador no concede lectura médica. No hay escrituras de cliente. `read_medical_records` exige concesión explícita y agrega auditoría de lectura; aún no se ofrece UI para otorgar esos consentimientos. Niños sin cuenta y sin permisos predeterminados. `recipes` contiene solo un catálogo global no privado; recetas familiares futuras requieren ámbito de hogar y nuevas políticas antes de añadirse ahí.
+
+El stock usa políticas por producto (`tracked`, `always_available`, `untracked`) y una fecha de reanudación para exigir conteo fresco tras una pausa. Carnes por defecto, básicos disponibles. Entradas y presentación en lb/oz, valores canónicos en gramos, sin convertir estado crudo/cocido. Las pruebas PostgreSQL ejecutan las mismas migraciones y verifican roles, privacidad, aislamiento, conflictos, operaciones e idempotencia. Las pruebas Auth en navegador usan un contrato HTTP local, sin afirmar que SMTP ni Supabase alojado hayan sido probados.

@@ -1,29 +1,293 @@
-'use client';
-import { ShoppingBag, ArrowUpRight, ShieldCheck, Users, Info } from 'lucide-react';
-import { forecastMeat, type Preparation, type PurchasePeriod } from '../../lib/meat-shopping';
-import {purchaseNeeded, type StockMovement} from '../../lib/pantry';
-import type { State } from '../../lib/domain';
-const number = (value: number, digits = 2) => new Intl.NumberFormat('es-GT', { maximumFractionDigits: digits }).format(value);
-const kilograms = (grams: number) => `${number(grams / 1000)} kg`;
+"use client";
+import {
+  ShoppingBag,
+  ArrowUpRight,
+  ShieldCheck,
+  Users,
+  Info,
+} from "lucide-react";
+import {
+  forecastMeat,
+  type Preparation,
+  type PurchasePeriod,
+} from "../../lib/meat-shopping";
+import { purchaseNeeded, type StockMovement } from "../../lib/pantry";
+import {
+  stockMode,
+  controlledMovements,
+  imperial,
+  type StockPolicies,
+} from "../../lib/stock-policy";
+import type { State } from "../../lib/domain";
+const number = (value: number, digits = 2) =>
+  new Intl.NumberFormat("es-GT", { maximumFractionDigits: digits }).format(
+    value,
+  );
+const weightText = (grams: number) => imperial(grams);
 
-export default function MeatShopping({ history, goals, period, stockMovements, onPeriodChange, onGoPlan, onGoProfiles }: {
-  stockMovements:StockMovement[]; history: Preparation[]; goals: State['goals']; period: PurchasePeriod;
-  onPeriodChange: (value: PurchasePeriod) => void; onGoPlan: () => void; onGoProfiles: () => void;
+export default function MeatShopping({
+  history,
+  goals,
+  period,
+  stockMovements,
+  policies,
+  onPeriodChange,
+  onGoPlan,
+  onGoProfiles,
+}: {
+  policies: StockPolicies;
+  stockMovements: StockMovement[];
+  history: Preparation[];
+  goals: State["goals"];
+  period: PurchasePeriod;
+  onPeriodChange: (value: PurchasePeriod) => void;
+  onGoPlan: () => void;
+  onGoProfiles: () => void;
 }) {
   const forecast = forecastMeat(history, goals, period);
-  return <section className="meat-shopping" aria-labelledby="meat-heading">
-    <div className="meat-heading"><div><span className="eyebrow">COMPRA CON ANTICIPACIÓN</span><h2 id="meat-heading">Carnes, con un poco de margen.</h2><p>Tu historial de recetas, las necesidades de cada quien y un 15 % de seguridad.</p></div><span className="tile-icon sage"><ShoppingBag size={22}/></span></div>
-    <div className="purchase-controls"><div className="period-options" role="group" aria-label="Período de compra">{([10,15,30] as const).map(days=><button key={days} type="button" aria-pressed={period===days} className={period===days?'chosen':''} onClick={()=>onPeriodChange(days)}>{days===30?'Un mes':`${days} días`}{days===30&&<small>30 días</small>}</button>)}</div><span className="safety-chip"><ShieldCheck size={16}/> +15 % incluido</span></div>
-    <div className="forecast-note"><Info size={17}/><p><strong>Estimación de demostración.</strong> Los macros de las recetas son ilustrativos, no verificados. El cálculo aproxima los objetivos de los adultos ajustando la receta completa; no garantiza cumplirlos exactamente. Los niños conservan una porción base, sin metas calóricas.</p></div>
-    {forecast.usableEvents === 0 ? <div className="forecast-empty"><span className="round-icon"><ShoppingBag size={23}/></span><h3>Primero, una receta que hayan preparado.</h3><p>Confirma una preparación en Cocina. Con ese historial podremos estimar qué carnes comprar, sin inventar hábitos ni cantidades.</p><button className="primary" onClick={onGoPlan}>Elegir una receta <ArrowUpRight size={16}/></button></div> : <>
-      <div className="forecast-summary"><span><Users size={16}/> {forecast.coveredMeals}/{forecast.totalMeals} combinaciones persona/comida con historial</span><span>{forecast.usableEvents} preparaciones · {period} días</span><strong>{forecast.partial?'Estimación parcial':'Cobertura de todos los tiempos'}</strong></div>
-      {forecast.items.length ? <div className="meat-grid">{forecast.items.map(item=>{const stock=purchaseNeeded(item.purchaseGrams,item.stockName,stockMovements);return <article className="meat-card" key={item.name}>
-        <span className="eyebrow">PARA {period} DÍAS</span><h3>{item.name}</h3><div className="meat-amount">{number(stock.needed / 453.59237)} <span>lb aprox.</span></div><p className="meat-kilos">{kilograms(stock.needed)} · {number(stock.needed,0)} g por comprar</p><small>{item.basis}</small>
-        <dl className="meat-breakdown"><div><dt>Base estimada</dt><dd>{kilograms(item.baseGrams)}</dd></div><div><dt>Seguridad · 15 %</dt><dd>+ {kilograms(item.safetyGrams)}</dd></div><div><dt>Necesidad con margen</dt><dd>{kilograms(item.purchaseGrams)}</dd></div><div><dt>En despensa</dt><dd>{stock.available===null?'Sin conteo':kilograms(stock.available)}</dd></div></dl>{stock.available===null&&<p className="pantry-hint">Sin inventario inicial: no se descontaron existencias. Cuenta este producto en Despensa para obtener el faltante.</p>}{stock.deficit&&<p className="stock-deficit">Saldo negativo en despensa: revisa compras y conteo. No se descontó disponibilidad.</p>}
-        <details><summary>Ver por persona y receta</summary><div className="meat-persons">{Object.entries(item.people).map(([person,grams])=><p key={person}><span>{person}</span><b>{kilograms(grams!)} base</b></p>)}</div>{item.sources.map((source,index)=><p className="meat-source" key={index}><strong>{source.person} · {source.recipe}</strong><br/>{source.meal} · {source.samples}/{source.totalSamples} preparaciones de ese tiempo · factor de porción {number(source.scale)}×<br/>{kilograms(source.grams)} antes del margen</p>)}</details>
-      </article>})}</div> : <div className="forecast-empty"><h3>No hay carnes en las recetas registradas.</h3><p>Se conservaron las recetas vegetarianas en el cálculo. No agregamos carnes que no aparecen en tu historial.</p></div>}
-    </>}
-    {(forecast.missing.length>0||forecast.warnings.length>0)&&<details className="forecast-missing"><summary>Qué falta para completar la compra {forecast.missing.length>0&&`· ${forecast.missing.length} tiempos sin historial`}</summary><p>Las cantidades mostradas solo cubren las combinaciones con datos. Un tiempo sin historial no significa que esa persona no coma.</p>{forecast.missing.length>0&&<ul>{forecast.missing.map(m=><li key={m}>{m}</li>)}</ul>}{forecast.warnings.map(w=><p key={w}>{w}</p>)}<button className="text-button" onClick={onGoProfiles}>Revisar objetivos de los adultos <ArrowUpRight size={14}/></button></details>}
-    <details className="forecast-method"><summary>Cómo se calcula</summary><p>Se usa todo el historial de preparaciones de cada persona, agrupado por desayuno, almuerzo y cena. Se supone una comida de cada tiempo al día y se repite la proporción de recetas observada, incluidas las vegetarianas. No se interpreta el historial como consumo real.</p><p>Para adultos: reparto supuesto de objetivos diarios de 25 % desayuno, 40 % almuerzo y 35 % cena. Se busca un único factor de porción que aproxime calorías, proteína, carbohidratos y grasas con el menor error relativo cuadrático; se aplica ese mismo factor a todos los ingredientes de la receta. No es una optimización nutricional completa.</p><p>Cantidad = gramos de la receta × factor de porción × frecuencia entre recetas del mismo tiempo × {period} días. Se suman las personas y se añade 15 % una sola vez. Se redondea hacia arriba al gramo. Las libras son aproximadas (1 lb = 453.59237 g).</p><p>Después del 15 % se descuentan únicamente las existencias registradas del mismo producto y unidad. Si no hay inventario inicial, no se asume disponibilidad ni se descuentan cantidades. El faltante nunca es negativo. Esta proyección y los ingredientes del plan son dos formas de estimar una compra; no deben sumarse. No se convierten pesos crudos a cocidos ni peso escurrido a latas.</p>{forecast.legacyEvents>0&&<p>{forecast.legacyEvents} preparaciones antiguas se asociaron por identificador o nombre exacto al catálogo actual porque no tienen copia de la receta original. Las nuevas confirmaciones conservan esa copia.</p>}</details>
-  </section>;
+  return (
+    <section className="meat-shopping" aria-labelledby="meat-heading">
+      <div className="meat-heading">
+        <div>
+          <span className="eyebrow">COMPRA CON ANTICIPACIÓN</span>
+          <h2 id="meat-heading">Carnes, con un poco de margen.</h2>
+          <p>
+            Tu historial de recetas, las necesidades de cada quien y un 15 % de
+            seguridad.
+          </p>
+        </div>
+        <span className="tile-icon sage">
+          <ShoppingBag size={22} />
+        </span>
+      </div>
+      <div className="purchase-controls">
+        <div
+          className="period-options"
+          role="group"
+          aria-label="Período de compra"
+        >
+          {([10, 15, 30] as const).map((days) => (
+            <button
+              key={days}
+              type="button"
+              aria-pressed={period === days}
+              className={period === days ? "chosen" : ""}
+              onClick={() => onPeriodChange(days)}
+            >
+              {days === 30 ? "Un mes" : `${days} días`}
+              {days === 30 && <small>30 días</small>}
+            </button>
+          ))}
+        </div>
+        <span className="safety-chip">
+          <ShieldCheck size={16} /> +15 % incluido
+        </span>
+      </div>
+      <div className="forecast-note">
+        <Info size={17} />
+        <p>
+          <strong>Estimación de demostración.</strong> Los macros de las recetas
+          son ilustrativos, no verificados. El cálculo aproxima los objetivos de
+          los adultos ajustando la receta completa; no garantiza cumplirlos
+          exactamente. Los niños conservan una porción base, sin metas
+          calóricas.
+        </p>
+      </div>
+      {forecast.usableEvents === 0 ? (
+        <div className="forecast-empty">
+          <span className="round-icon">
+            <ShoppingBag size={23} />
+          </span>
+          <h3>Primero, una receta que hayan preparado.</h3>
+          <p>
+            Confirma una preparación en Cocina. Con ese historial podremos
+            estimar qué carnes comprar, sin inventar hábitos ni cantidades.
+          </p>
+          <button className="primary" onClick={onGoPlan}>
+            Elegir una receta <ArrowUpRight size={16} />
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="forecast-summary">
+            <span>
+              <Users size={16} /> {forecast.coveredMeals}/{forecast.totalMeals}{" "}
+              combinaciones persona/comida con historial
+            </span>
+            <span>
+              {forecast.usableEvents} preparaciones · {period} días
+            </span>
+            <strong>
+              {forecast.partial
+                ? "Estimación parcial"
+                : "Cobertura de todos los tiempos"}
+            </strong>
+          </div>
+          {forecast.items.length ? (
+            <div className="meat-grid">
+              {forecast.items
+                .filter(
+                  (item) =>
+                    stockMode(item.stockName, "g", policies) !==
+                    "always_available",
+                )
+                .map((item) => {
+                  const stock = purchaseNeeded(
+                    item.purchaseGrams,
+                    item.stockName,
+                    controlledMovements(stockMovements, policies),
+                  );
+                  return (
+                    <article className="meat-card" key={item.name}>
+                      <span className="eyebrow">PARA {period} DÍAS</span>
+                      <h3>{item.name}</h3>
+                      <div className="meat-amount">
+                        {imperial(stock.needed)}
+                      </div>
+                      <p className="meat-kilos">
+                        Por comprar · margen incluido
+                      </p>
+                      <small>{item.basis}</small>
+                      <dl className="meat-breakdown">
+                        <div>
+                          <dt>Base estimada</dt>
+                          <dd>{weightText(item.baseGrams)}</dd>
+                        </div>
+                        <div>
+                          <dt>Seguridad · 15 %</dt>
+                          <dd>+ {weightText(item.safetyGrams)}</dd>
+                        </div>
+                        <div>
+                          <dt>Necesidad con margen</dt>
+                          <dd>{weightText(item.purchaseGrams)}</dd>
+                        </div>
+                        <div>
+                          <dt>En despensa</dt>
+                          <dd>
+                            {stock.available === null
+                              ? "Sin conteo"
+                              : weightText(stock.available)}
+                          </dd>
+                        </div>
+                      </dl>
+                      {stock.available === null && (
+                        <p className="pantry-hint">
+                          Sin inventario inicial: no se descontaron existencias.
+                          Cuenta este producto en Despensa para obtener el
+                          faltante.
+                        </p>
+                      )}
+                      {stock.deficit && (
+                        <p className="stock-deficit">
+                          Saldo negativo en despensa: revisa compras y conteo.
+                          No se descontó disponibilidad.
+                        </p>
+                      )}
+                      <details>
+                        <summary>Ver por persona y receta</summary>
+                        <div className="meat-persons">
+                          {Object.entries(item.people).map(
+                            ([person, grams]) => (
+                              <p key={person}>
+                                <span>{person}</span>
+                                <b>{weightText(grams!)} base</b>
+                              </p>
+                            ),
+                          )}
+                        </div>
+                        {item.sources.map((source, index) => (
+                          <p className="meat-source" key={index}>
+                            <strong>
+                              {source.person} · {source.recipe}
+                            </strong>
+                            <br />
+                            {source.meal} · {source.samples}/
+                            {source.totalSamples} preparaciones de ese tiempo ·
+                            factor de porción {number(source.scale)}×<br />
+                            {weightText(source.grams)} antes del margen
+                          </p>
+                        ))}
+                      </details>
+                    </article>
+                  );
+                })}
+            </div>
+          ) : (
+            <div className="forecast-empty">
+              <h3>No hay carnes en las recetas registradas.</h3>
+              <p>
+                Se conservaron las recetas vegetarianas en el cálculo. No
+                agregamos carnes que no aparecen en tu historial.
+              </p>
+            </div>
+          )}
+        </>
+      )}
+      {(forecast.missing.length > 0 || forecast.warnings.length > 0) && (
+        <details className="forecast-missing">
+          <summary>
+            Qué falta para completar la compra{" "}
+            {forecast.missing.length > 0 &&
+              `· ${forecast.missing.length} tiempos sin historial`}
+          </summary>
+          <p>
+            Las cantidades mostradas solo cubren las combinaciones con datos. Un
+            tiempo sin historial no significa que esa persona no coma.
+          </p>
+          {forecast.missing.length > 0 && (
+            <ul>
+              {forecast.missing.map((m) => (
+                <li key={m}>{m}</li>
+              ))}
+            </ul>
+          )}
+          {forecast.warnings.map((w) => (
+            <p key={w}>{w}</p>
+          ))}
+          <button className="text-button" onClick={onGoProfiles}>
+            Revisar objetivos de los adultos <ArrowUpRight size={14} />
+          </button>
+        </details>
+      )}
+      <details className="forecast-method">
+        <summary>Cómo se calcula</summary>
+        <p>
+          Se usa todo el historial de preparaciones de cada persona, agrupado
+          por desayuno, almuerzo y cena. Se supone una comida de cada tiempo al
+          día y se repite la proporción de recetas observada, incluidas las
+          vegetarianas. No se interpreta el historial como consumo real.
+        </p>
+        <p>
+          Para adultos: reparto supuesto de objetivos diarios de 25 % desayuno,
+          40 % almuerzo y 35 % cena. Se busca un único factor de porción que
+          aproxime calorías, proteína, carbohidratos y grasas con el menor error
+          relativo cuadrático; se aplica ese mismo factor a todos los
+          ingredientes de la receta. No es una optimización nutricional
+          completa.
+        </p>
+        <p>
+          Cantidad = gramos de la receta × factor de porción × frecuencia entre
+          recetas del mismo tiempo × {period} días. Se suman las personas y se
+          añade 15 % una sola vez. Se redondea hacia arriba al gramo. Las libras
+          son aproximadas (1 lb = 453.59237 g).
+        </p>
+        <p>
+          Después del 15 % se descuentan únicamente las existencias registradas
+          del mismo producto y unidad. Si no hay inventario inicial, no se asume
+          disponibilidad ni se descuentan cantidades. El faltante nunca es
+          negativo. Esta proyección y los ingredientes del plan son dos formas
+          de estimar una compra; no deben sumarse. No se convierten pesos crudos
+          a cocidos ni peso escurrido a latas.
+        </p>
+        {forecast.legacyEvents > 0 && (
+          <p>
+            {forecast.legacyEvents} preparaciones antiguas se asociaron por
+            identificador o nombre exacto al catálogo actual porque no tienen
+            copia de la receta original. Las nuevas confirmaciones conservan esa
+            copia.
+          </p>
+        )}
+      </details>
+    </section>
+  );
 }

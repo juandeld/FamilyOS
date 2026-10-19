@@ -1,2 +1,2 @@
 import {defineConfig,devices} from '@playwright/test';
-export default defineConfig({testDir:'./tests/e2e',use:{baseURL:'http://127.0.0.1:3000',...devices['iPhone 13'],defaultBrowserType:'chromium',launchOptions:{executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']}},reporter:'list'});
+export default defineConfig({testDir:'./tests/e2e',use:{baseURL:'http://127.0.0.1:3002',...devices['iPhone 13'],defaultBrowserType:'chromium',launchOptions:{executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox']}},reporter:'list',webServer:{command:'npm start -- --port 3002',url:'http://127.0.0.1:3002/demo',timeout:30000,reuseExistingServer:false}});
