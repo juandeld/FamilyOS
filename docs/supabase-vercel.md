@@ -12,7 +12,7 @@ En Project Settings → API/Data API confirma que `public` está entre los esque
 
 ## 2. Crear las tablas, permisos y funciones
 
-En el SQL Editor del proyecto **nuevo**, abre una consulta y pega el contenido completo de [supabase/setup.sql](../supabase/setup.sql). Pulsa Run una sola vez. El archivo incluye las cuatro migraciones, dentro de una transacción: estructura y RLS, operaciones restringidas, catálogo genérico de recetas ilustrativas. No contiene usuarios, contraseñas ni datos familiares de prueba.
+En el SQL Editor del proyecto **nuevo**, abre una consulta y pega el contenido completo de [supabase/setup.sql](../supabase/setup.sql). Pulsa Run una sola vez. El archivo incluye las cinco migraciones, dentro de una transacción: estructura y RLS, operaciones restringidas, catálogo genérico de recetas ilustrativas. No contiene usuarios, contraseñas ni datos familiares de prueba.
 
 Alternativa para desarrollo: aplicar por orden `supabase/migrations/*.sql` con Supabase CLI/migraciones. **Usa uno de los dos métodos**, no ambos. Si ya aplicaste la estructura, no repitas el archivo inicial. Las actualizaciones siguientes deben ser nuevas migraciones.
 
@@ -176,3 +176,9 @@ Para importar mantenimiento, valida `maintenance-import.json` con `parseMaintena
 ### Verificación de coexistencia
 
 `tests/shared-schema.test.ts` instala el bundle sobre tablas/funciones `public` preexistentes y comprueba que permanezcan intactas, incluida su configuración de RLS/ACL. Prueba dos administradores sincronizados, conflictos de revisión, privacidad de cocina, usuarios de la otra app, otro hogar y anónimos, y colisiones deliberadas de nombres en `public`. Las pruebas de navegador de Auth exigen cabeceras `Accept-Profile`/`Content-Profile: familyos` y cierre de sesión local. Las comprobaciones alojadas deben usar datos ficticios temporales y eliminarlos al terminar, sin enviar correos a personas de prueba.
+
+
+La migración `202610190005_sync_conflicts.sql` devuelve `PT409` (HTTP409) para revisiones antiguas. El cliente acepta también el código anterior `40001` durante la actualización; conserva el control atómico de revisión, la auditoría y los permisos. En un proyecto compartido, aplica esta actualización dirigida a `familyos` con las mismas referencias y `search_path` del bundle, nunca reemplaces una función ajena en `public`.
+
+
+En instalaciones compartidas, `/auth/callback` también acepta las sesiones en fragmento `#` de las plantillas estándar de Supabase (tipos invite/recovery). Retira el fragmento antes de inicializar el cliente PKCE y verifica la sesión explícitamente; no requiere reemplazar las plantillas globales de la otra aplicación. Los enlaces PKCE y `/auth/confirm` con token hash siguen disponibles.

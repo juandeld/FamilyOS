@@ -113,7 +113,7 @@ async function main() {
         expected_revision: before.data!.revision,
         new_data: before.data!.data,
       });
-      assert.equal(stale.error?.code, "40001");
+      assert.ok(["PT409", "40001"].includes(stale.error?.code || ""));
       const disable = await a.client.rpc("manage_household_member", {
         hid,
         member_id: c.member.user_id,

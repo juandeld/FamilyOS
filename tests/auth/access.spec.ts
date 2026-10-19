@@ -42,7 +42,7 @@ function session(id: string) {
     }),
   ).toString("base64url");
   return {
-    access_token: `eyJhbGciOiJIUzI1NiJ9.${payload}.local-fixture`,
+    access_token: `eyJhbGciOiJIUzI1NiJ9.${payload}.${Buffer.from("local-fixture-signature").toString("base64url")}`,
     token_type: "bearer",
     expires_in: 3600,
     refresh_token: "local-fixture-not-real",
@@ -160,7 +160,7 @@ async function fixture(
       if (url.pathname === "/rest/v1/rpc/save_household_state") {
         const args = request.postDataJSON();
         if (args.expected_revision !== backend.revision)
-          return send({ code: "40001", message: "State conflict" }, 409);
+          return send({ code: "PT409", message: "State conflict" }, 409);
         backend.state = args.new_data;
         backend.revision++;
         return send(backend.revision);
@@ -389,4 +389,22 @@ test("administrator imports a prepared maintenance file privately and refuses fa
       (p) => p.status === "draft" && p.assigneeId === "",
     ),
   ).toBeTruthy();
+});
+
+
+test("standard shared-project invitation works with PKCE client and removes session tokens from the URL", async ({browser}) => {
+  const backend = {state: emptyHouseholdState(), revision: 0, privateReads: 0};
+  const context = await browser.newContext();
+  await fixture(context, backend);
+  const page = await context.newPage();
+  const localSession = session(users[0].id);
+  await page.goto("http://127.0.0.1:3001/auth/callback#" + new URLSearchParams({
+    access_token: localSession.access_token,
+    refresh_token: localSession.refresh_token,
+    type: "invite",
+  }).toString());
+  await expect(page).toHaveURL(/\/auth\/reset-password$/);
+  await expect(page.getByLabel("Nueva contraseña", {exact:true})).toBeVisible();
+  expect(new URL(page.url()).hash).toBe("");
+  await context.close();
 });

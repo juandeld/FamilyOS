@@ -85,7 +85,7 @@ export function useHouseholdState(workspace: Workspace | null) {
     saving.current = false;
     if (!mounted.current) return;
     if (e) {
-      if (e.code === "40001") {
+      if (e.code === "PT409" || e.code === "40001") {
         try {
           await fetchRemote();
           if (!conflicted.current)

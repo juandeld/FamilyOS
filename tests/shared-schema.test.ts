@@ -202,7 +202,10 @@ test("shared Supabase project preserves the other app and isolates FamilyOS", as
           assert.deepEqual(doc.data.notes, ["Juan shared change"]);
           await assert.rejects(
             () => rows("select familyos.save_household_state($1,0,'{}')", [h1]),
-            /State conflict/,
+            (error: unknown) => {
+              assert.equal((error as {code: string}).code, "PT409");
+              return true;
+            },
           );
           assert.equal(
             (
