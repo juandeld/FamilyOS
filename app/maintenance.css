@@ -1,0 +1,763 @@
+.maintenance-manager {
+  margin-bottom: 35px;
+}
+.maintenance-hero {
+  display: flex;
+  align-items: center;
+  gap: 19px;
+  padding: 26px;
+  background: var(--deep);
+  color: var(--deep-text);
+  border-radius: 22px;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 23px;
+  position: relative;
+  overflow: hidden;
+}
+.maintenance-hero:after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  top: -65px;
+  width: 250px;
+  height: 250px;
+  border: 1px solid rgb(201 142 118 / 14%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.maintenance-hero-icon {
+  height: 53px;
+  width: 53px;
+  display: grid;
+  place-items: center;
+  border-radius: 17px;
+  background: rgb(201 142 118 / 15%);
+  color: #ddb39d;
+  flex-shrink: 0;
+}
+.maintenance-hero > div {
+  flex: 1;
+}
+.maintenance-hero .eyebrow {
+  color: #d0a88f;
+  font-size: 9px;
+  margin-bottom: 7px;
+  display: block;
+}
+.maintenance-hero h2 {
+  margin: 0 0 8px;
+  font: 400 32px/1.05 var(--font-serif);
+  color: var(--deep-text);
+}
+.maintenance-hero p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #c8beb2;
+  margin: 0;
+}
+.maintenance-source {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  color: #e5cdbb;
+  white-space: nowrap;
+}
+.maintenance-welcome {
+  padding: 31px;
+  max-width: 760px;
+}
+.maintenance-welcome > svg {
+  color: var(--terracota-ink);
+  margin-bottom: 18px;
+}
+.maintenance-welcome h3 {
+  font-size: 23px;
+  margin-bottom: 12px;
+}
+.maintenance-welcome p {
+  font-size: 14px;
+  max-width: 600px;
+}
+.maintenance-welcome .primary {
+  margin: 7px 0 10px;
+  gap: 12px;
+}
+.maintenance-welcome > input {
+  display: block;
+  margin: 15px 0;
+  font-size: 12px;
+}
+.maintenance-welcome .maintenance-caption {
+  font-size: 11px;
+  max-width: 520px;
+}
+.maintenance-welcome > .text-button {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+.maintenance-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  margin-bottom: 23px;
+}
+.maintenance-metrics > div {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 19px 21px;
+  box-shadow: var(--card-shadow);
+}
+.maintenance-metrics > div > span {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 0.13em;
+  color: var(--ink-muted);
+  margin-bottom: 12px;
+}
+.maintenance-metrics strong {
+  font-size: 31px;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-weight: 500;
+}
+.maintenance-metrics small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+.maintenance-tabs {
+  margin-bottom: 20px;
+}
+.maintenance-toolbar {
+  display: flex;
+  gap: 15px;
+  align-items: end;
+  margin: 0 0 23px;
+  flex-wrap: wrap;
+}
+.maintenance-toolbar > label {
+  font-size: 11px;
+  flex: 1;
+  max-width: 240px;
+}
+.maintenance-toolbar input,
+.maintenance-toolbar select {
+  display: block;
+  width: 100%;
+  font-size: 13px;
+  min-height: 42px;
+  margin-top: 6px;
+  background: var(--surface);
+}
+.maintenance-toolbar > .text-button {
+  margin-left: auto;
+  font-size: 12px;
+  gap: 6px;
+}
+.maintenance-activation {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  padding: 20px 22px;
+  margin-bottom: 24px;
+  border-radius: 17px;
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--terracota) 15%, transparent);
+}
+.maintenance-activation > div {
+  flex: 1;
+}
+.maintenance-activation strong {
+  font-size: 13px;
+  display: block;
+  line-height: 1.5;
+}
+.maintenance-activation small {
+  font-size: 11px;
+  line-height: 1.5;
+  display: block;
+  margin-top: 5px;
+}
+.maintenance-activation > label {
+  font-size: 10px;
+}
+.maintenance-activation input {
+  display: block;
+  font-size: 12px;
+  margin-top: 5px;
+  background: var(--surface);
+  min-height: 40px;
+}
+.maintenance-activation .primary {
+  font-size: 11px;
+  min-height: 40px;
+  padding: 10px 13px;
+  white-space: nowrap;
+}
+.maintenance-plan-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+.maintenance-card {
+  padding: 23px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
+  border-radius: 18px;
+  box-shadow: var(--card-shadow);
+  min-width: 0;
+}
+.maintenance-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 17px;
+  flex-wrap: wrap;
+}
+.maintenance-card-top > span:last-child {
+  font-size: 10px;
+  color: var(--ink-muted);
+}
+.maintenance-priority {
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  background: var(--surface-sunken);
+  padding: 5px 8px;
+  border-radius: 7px;
+  color: var(--ink-muted);
+}
+.maintenance-priority.high {
+  background: var(--accent-soft);
+  color: var(--terracota-ink);
+}
+.maintenance-card h3 {
+  font-size: 18px;
+  line-height: 1.3;
+  margin-bottom: 9px;
+  overflow-wrap: anywhere;
+}
+.maintenance-card > p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+.maintenance-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--ink-muted);
+}
+.maintenance-card-meta > span {
+  margin-left: auto;
+  font-size: 9px;
+}
+.maintenance-card-actions {
+  border-top: 1px solid var(--line);
+  margin-top: 18px;
+  padding-top: 15px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.maintenance-card-actions .primary {
+  font-size: 11px;
+  padding: 8px 12px;
+  min-height: 39px;
+  border-radius: 10px;
+  box-shadow: none;
+}
+.maintenance-card-actions .text-button {
+  font-size: 11px;
+  gap: 5px;
+  min-height: 36px;
+}
+.maintenance-empty {
+  padding: 32px 20px;
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  grid-column: 1/-1;
+  color: var(--ink-muted);
+  background: color-mix(in srgb, var(--surface) 65%, transparent);
+}
+.maintenance-empty > svg {
+  margin: 0 auto 15px;
+  color: var(--terracota-ink);
+}
+.maintenance-empty h3 {
+  font-size: 18px;
+  line-height: 1.4;
+  margin: 0 0 9px;
+}
+.maintenance-empty p {
+  font-size: 13px;
+  margin-bottom: 0;
+}
+.maintenance-analysis {
+  padding: 21px;
+  font-size: 12px;
+}
+.maintenance-analysis summary {
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 13px;
+  min-height: 25px;
+}
+.maintenance-analysis p {
+  font-size: 12px;
+  margin: 12px 0 0;
+  line-height: 1.7;
+}
+.maintenance-review {
+  padding: 13px 15px;
+  background: var(--accent-soft);
+  border-radius: 11px;
+  color: var(--terracota-ink);
+  font-size: 11px;
+  line-height: 1.7;
+  margin: 13px 0;
+}
+.maintenance-review p {
+  font-size: 12px;
+  color: var(--ink);
+  line-height: 1.7;
+  margin: 10px 0;
+}
+.maintenance-materials > p,
+.maintenance-history > p {
+  font-size: 13px;
+}
+.maintenance-material {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 17px 0;
+  border-top: 1px solid var(--line);
+}
+.maintenance-material > span {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  flex-shrink: 0;
+  background: var(--surface-sunken);
+  color: var(--ink-muted);
+  border-radius: 9px;
+}
+.maintenance-material > span.material-ready {
+  background: var(--accent-soft);
+  color: var(--terracota-ink);
+}
+.maintenance-material strong {
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+.maintenance-material small {
+  font-size: 11px;
+  line-height: 1.6;
+  display: block;
+  margin-top: 5px;
+}
+.maintenance-history-row {
+  border-top: 1px solid var(--line);
+  padding: 21px 0;
+}
+.maintenance-history-row > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--terracota-ink);
+  font-size: 11px;
+}
+.maintenance-history-row h4 {
+  font: 500 16px/1.4 var(--font-sans);
+  margin: 12px 0 7px;
+}
+.maintenance-history-row p {
+  font-size: 12px;
+  margin: 7px 0;
+}
+.maintenance-history-row small {
+  font-size: 11px;
+}
+.maintenance-dialog {
+  max-width: 650px;
+}
+.maintenance-dialog > label {
+  margin: 14px 0;
+  font-size: 12px;
+}
+.maintenance-dialog input:not([type="checkbox"]),
+.maintenance-dialog select {
+  width: 100%;
+  display: block;
+  margin: 7px 0 13px;
+  min-height: 44px;
+  font-size: 14px;
+  border-radius: 11px;
+  background: var(--ground);
+}
+.maintenance-dialog h3 {
+  font-size: 18px;
+  margin: 25px 0 12px;
+}
+.maintenance-dialog .primary {
+  margin-top: 20px;
+}
+.maintenance-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.maintenance-form-grid label {
+  font-size: 12px;
+}
+.maintenance-months {
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 7px;
+  margin: 10px 0 18px;
+}
+.maintenance-months legend {
+  font-size: 11px;
+  color: var(--ink-muted);
+  padding: 0 5px;
+}
+.maintenance-months button {
+  background: var(--surface-sunken);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 11px;
+  min-height: 36px;
+  padding: 7px;
+}
+.maintenance-months button[aria-pressed="true"] {
+  background: var(--terracota-ink);
+  color: var(--on-terracota);
+}
+.maintenance-check {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 11px !important;
+  line-height: 1.7;
+  margin: 12px 0 !important;
+}
+.maintenance-check input[type="checkbox"] {
+  height: 17px !important;
+  width: 17px !important;
+  min-height: 17px !important;
+  flex-shrink: 0;
+  margin: 3px 0 0;
+  padding: 0;
+  accent-color: var(--terracota-ink);
+}
+.maintenance-edit-material {
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  margin: 9px 0;
+}
+.maintenance-edit-material input:not([type="checkbox"]) {
+  font-size: 12px;
+  min-height: 40px;
+}
+.maintenance-source-details {
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.maintenance-source-details summary {
+  cursor: pointer;
+  min-height: 35px;
+  font-size: 12px;
+}
+.maintenance-source-details p {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.maintenance-source-details small {
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+.operational-instructions {
+  white-space: pre-line;
+  line-height: 1.7 !important;
+  max-width: 600px;
+}
+.maintenance-manager .notice {
+  font-size: 12px;
+}
+@media (max-width: 1100px) {
+  .maintenance-activation {
+    flex-wrap: wrap;
+  }
+  .maintenance-activation > div {
+    flex-basis: 100%;
+  }
+  .maintenance-source {
+    display: none;
+  }
+  .maintenance-card {
+    padding: 21px;
+  }
+  .maintenance-plan-list {
+    gap: 13px;
+  }
+}
+@media (max-width: 760px) {
+  .maintenance-manager {
+    margin-bottom: 28px;
+  }
+  .maintenance-hero {
+    padding: 21px 18px;
+    gap: 13px;
+    border-radius: 18px;
+    margin-bottom: 19px;
+    align-items: flex-start;
+  }
+  .maintenance-hero-icon {
+    width: 41px;
+    height: 41px;
+    border-radius: 13px;
+  }
+  .maintenance-hero-icon > svg {
+    width: 22px;
+  }
+  .maintenance-hero .eyebrow {
+    font-size: 7px;
+    letter-spacing: 0.1em;
+    line-height: 1.6;
+    margin-bottom: 6px;
+  }
+  .maintenance-hero h2 {
+    font-size: 28px;
+    line-height: 1.05;
+    margin-bottom: 9px;
+  }
+  .maintenance-hero p {
+    font-size: 10px;
+    line-height: 1.7;
+  }
+  .maintenance-welcome {
+    padding: 25px 21px;
+  }
+  .maintenance-welcome h3 {
+    font-size: 21px;
+    line-height: 1.3;
+  }
+  .maintenance-welcome p {
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .maintenance-welcome .primary {
+    font-size: 12px;
+    gap: 8px;
+  }
+  .maintenance-welcome .maintenance-caption {
+    font-size: 10px;
+  }
+  .maintenance-metrics {
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .maintenance-metrics > div {
+    padding: 15px 11px;
+    border-radius: 13px;
+  }
+  .maintenance-metrics > div > span {
+    font-size: 7px;
+    letter-spacing: 0.07em;
+    line-height: 1.5;
+    min-height: 21px;
+    margin-bottom: 11px;
+  }
+  .maintenance-metrics strong {
+    font-size: 26px;
+  }
+  .maintenance-metrics small {
+    font-size: 8px;
+    line-height: 1.6;
+    margin-top: 8px;
+  }
+  .maintenance-tabs {
+    margin-bottom: 19px;
+  }
+  .maintenance-tabs button {
+    font-size: 11px;
+    flex: 1;
+    padding: 8px 9px;
+  }
+  .maintenance-toolbar {
+    gap: 11px;
+    margin-bottom: 20px;
+  }
+  .maintenance-toolbar > label {
+    font-size: 10px;
+    min-width: 0;
+    flex: 1;
+    max-width: none;
+  }
+  .maintenance-toolbar input,
+  .maintenance-toolbar select {
+    font-size: 12px;
+    min-height: 44px;
+    border-radius: 11px;
+    padding: 10px;
+  }
+  .maintenance-toolbar > .text-button {
+    font-size: 11px;
+    min-height: 32px;
+    margin-top: 0;
+  }
+  .maintenance-activation {
+    padding: 18px;
+    gap: 13px;
+    border-radius: 15px;
+    margin-bottom: 21px;
+  }
+  .maintenance-activation strong {
+    font-size: 12px;
+  }
+  .maintenance-activation small {
+    font-size: 10px;
+  }
+  .maintenance-activation > label {
+    font-size: 9px;
+    flex: 1;
+    min-width: 0;
+  }
+  .maintenance-activation input {
+    width: 100%;
+    font-size: 11px;
+    min-height: 42px;
+    padding: 8px;
+  }
+  .maintenance-activation .primary {
+    font-size: 10px;
+    min-height: 42px;
+    padding: 8px 10px;
+    margin-top: 16px;
+  }
+  .maintenance-plan-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .maintenance-card {
+    padding: 21px;
+    border-radius: 16px;
+  }
+  .maintenance-card-top {
+    margin-bottom: 15px;
+  }
+  .maintenance-card-top > span:last-child {
+    font-size: 10px;
+  }
+  .maintenance-card h3 {
+    font-size: 18px;
+  }
+  .maintenance-card p {
+    font-size: 11px;
+  }
+  .maintenance-card-meta {
+    font-size: 10px;
+  }
+  .maintenance-card-meta > span {
+    font-size: 9px;
+  }
+  .maintenance-card-actions {
+    gap: 15px;
+    margin-top: 17px;
+    padding-top: 13px;
+  }
+  .maintenance-card-actions .primary {
+    font-size: 11px;
+    min-height: 42px;
+  }
+  .maintenance-card-actions .text-button {
+    font-size: 11px;
+    min-height: 42px;
+  }
+  .maintenance-empty {
+    padding: 28px 18px;
+  }
+  .maintenance-empty h3 {
+    font-size: 17px;
+  }
+  .maintenance-empty p {
+    font-size: 12px;
+  }
+  .maintenance-analysis {
+    padding: 19px;
+  }
+  .maintenance-analysis summary {
+    font-size: 12px;
+  }
+  .maintenance-analysis p {
+    font-size: 11px;
+  }
+  .maintenance-material strong {
+    font-size: 12px;
+  }
+  .maintenance-material small {
+    font-size: 10px;
+  }
+  .maintenance-materials > p,
+  .maintenance-history > p {
+    font-size: 12px;
+  }
+  .maintenance-dialog {
+    padding: 28px 22px;
+  }
+  .maintenance-dialog h2 {
+    font-size: 30px;
+  }
+  .maintenance-dialog p {
+    font-size: 12px;
+  }
+  .maintenance-dialog input:not([type="checkbox"]),
+  .maintenance-dialog select {
+    font-size: 13px;
+  }
+  .maintenance-form-grid {
+    gap: 10px;
+  }
+  .maintenance-form-grid label {
+    font-size: 11px;
+  }
+  .maintenance-months {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+    padding: 12px;
+  }
+  .maintenance-months button {
+    font-size: 11px;
+    min-height: 38px;
+  }
+  .maintenance-review p {
+    font-size: 11px;
+  }
+  .maintenance-dialog .task-access {
+    margin-left: 0;
+    width: 100%;
+  }
+  .maintenance-source-details p {
+    font-size: 11px;
+  }
+  .maintenance-manager + .toolbar {
+    margin-top: 30px;
+  }
+}

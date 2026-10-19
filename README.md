@@ -113,3 +113,7 @@ La aplicación conserva los datos, claves de almacenamiento, permisos y flujos d
 ## Experiencia de producto
 
 La [dirección de UX/UI actual](docs/product-experience.md) conserva el logo y la paleta, con fotografía ambiental, superficies con profundidad, navegación inferior en móvil y planificación de cocina con progreso por persona. La instrucción posterior del usuario permite apartarse de las restricciones visuales del manual original. Las imágenes son ilustrativas, se sirven localmente y no representan preparaciones confirmadas. No se conectaron servicios nuevos de IA.
+
+## Mantenimiento de la casa
+
+[Guía de mantenimiento e importación privada](docs/maintenance.md): plan base, activación explícita, agenda, insumos por validar e historial real. Cada confirmación prepara la siguiente tarea. El ejemplo de la demo es ficticio; no contiene el archivo de la familia. La conexión anterior a Supabase se retiró porque pertenece a otra aplicación: se requiere un proyecto exclusivo para activar el modo privado.

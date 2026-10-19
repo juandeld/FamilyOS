@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {demoMaintenance} from '../../lib/maintenance';
 async function navigate(page:any,name:string){await page.getByRole('button',{name:'Abrir navegación'}).click();await page.getByRole('navigation').getByRole('button',{name,exact:true}).click();}
 test('weekly planning, separate profiles, shopping, recipe and prepared history persist',async({page})=>{
  await page.goto('/demo');await expect(page.getByRole('heading',{name:'Hoy en casa'})).toBeVisible();
@@ -119,4 +120,54 @@ test('mobile shortcuts share the same plan and tasks, and the full drawer remain
    await page.setViewportSize({ width, height: 844 });
    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
  }
+});
+
+test('maintenance separates the proposed plan from actual work and schedules its next occurrence', async ({ page }) => {
+ await page.goto('/demo');await navigate(page,'Casa');
+ await expect(page.getByLabel('Archivo de mantenimiento preparado')).toHaveCount(0);
+ await page.getByRole('button',{name:'Probar plan de ejemplo'}).click();
+ await expect(page.locator('.maintenance-card')).toHaveCount(8);
+ await page.getByRole('button',{name:'Activar rutinas listas'}).click();
+ await expect(page.locator('.maintenance-card')).toHaveCount(8);
+ const title=await page.locator('.maintenance-card h3').first().innerText();
+ await page.getByRole('button',{name:'Confirmar trabajo',exact:true}).first().click();
+ await page.getByLabel('Nota del mantenimiento').fill('Inspección terminada, sin obstrucciones.');
+ await page.getByLabel('Costo real del mantenimiento').fill('125.50');
+ await page.getByRole('button',{name:'Sí, registrar trabajo',exact:true}).click();
+ await page.getByRole('button',{name:'Historial',exact:true}).click();
+ await expect(page.locator('.maintenance-history-row')).toHaveCount(1);
+ await expect(page.locator('.maintenance-history-row')).toContainText(title);
+ await expect(page.locator('.maintenance-history-row')).toContainText('125.50');
+ const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('familyos-v1')!).maintenance);
+ expect(saved.history).toHaveLength(1);expect(saved.plans[0].nextDue>saved.history[0].completedOn).toBeTruthy();
+ await page.reload();await navigate(page,'Casa');await page.getByRole('button',{name:'Historial',exact:true}).click();
+ await expect(page.locator('.maintenance-history-row')).toContainText('Inspección terminada');
+ await page.screenshot({path:'/tmp/familyos-maintenance-mobile.png',fullPage:true});
+ for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();}
+});
+
+test('maintenance review is required before activation and pauses do not fabricate history', async ({ page }) => {
+ const prepared=demoMaintenance();prepared.plans[0].review=['Confirmar el calendario antes de activar.'];
+ await page.addInitScript(value=>localStorage.setItem('familyos-v1',JSON.stringify({maintenance:value})),prepared);
+ await page.goto('/demo');await navigate(page,'Casa');await page.getByRole('button',{name:'Activar rutinas listas'}).click();
+ await expect(page.locator('.maintenance-card')).toHaveCount(7);
+ await page.getByRole('button',{name:'Plan base',exact:true}).click();
+ await page.getByRole('button',{name:'Revisar rutina',exact:true}).first().click();
+ await page.getByLabel('Frecuencia de mantenimiento').selectOption('quarterly');
+ await page.getByLabel('Horas de mantenimiento').fill('1.5');
+ await page.getByLabel('Responsable de mantenimiento').selectOption('Rosa López');
+ await page.getByRole('button',{name:'Guardar rutina',exact:true}).click();
+ await expect(page.getByRole('dialog',{name:'Editar rutina'})).toBeVisible();
+ await page.getByLabel('Observaciones revisadas').check();
+ await page.getByRole('button',{name:'Guardar rutina',exact:true}).click();
+ await page.getByRole('button',{name:'Activar rutinas listas'}).click();
+ await page.getByRole('button',{name:'Plan base',exact:true}).click();
+ await page.getByRole('button',{name:'Pausar',exact:true}).first().click();
+ let saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('familyos-v1')!));
+ expect(saved.maintenance.plans[0].status).toBe('paused');expect(saved.maintenance.history).toHaveLength(0);
+ expect(saved.tasks.some((t:any)=>t.maintenance?.planId===saved.maintenance.plans[0].id&&!t.done)).toBeFalsy();
+ await page.getByRole('button',{name:'Reanudar',exact:true}).click();
+ saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('familyos-v1')!));
+ expect(saved.tasks.filter((t:any)=>t.maintenance?.planId===saved.maintenance.plans[0].id&&!t.done)).toHaveLength(1);
+ expect(saved.maintenance.plans[0].estimatedHours).toBe(1.5);
 });

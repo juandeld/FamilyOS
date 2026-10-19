@@ -39,6 +39,8 @@ import {
 } from "../../lib/domain";
 import Brand from "./brand";
 import HomeDashboard from "./home-dashboard";
+import MaintenanceManager from "./maintenance-manager";
+import { completeMaintenance } from "../../lib/maintenance";
 import RecipeArt from "./recipe-art";
 import ThemeToggle from "./theme-toggle";
 import { useWorkspace } from "./access-gate";
@@ -204,6 +206,37 @@ export default function FamilyApp() {
         ? "Preparación pendiente de sincronizar."
         : "Preparación registrada: se descontaron los productos controlados.",
     );
+  };
+  const setTaskDone = (id: string, done: boolean) => {
+    try {
+      setState((s) => {
+        const task = s.tasks.find((t) => t.id === id);
+        if (!task) return s;
+        if (task.maintenance) {
+          if (task.done) return s;
+          if (!done) throw new Error("El historial confirmado se conserva.");
+          const plan = s.maintenance.plans.find(
+            (p) => p.id === task.maintenance!.planId,
+          );
+          if (plan?.nextDue !== task.maintenance.dueDate)
+            throw new Error(
+              "La programación cambió. Revisa el plan de mantenimiento.",
+            );
+          return completeMaintenance(
+            s,
+            task.maintenance.planId,
+            new Date(),
+            workspace?.membership.display_name || "Administrador · demo",
+          );
+        }
+        return {
+          ...s,
+          tasks: s.tasks.map((t) => (t.id === id ? { ...t, done } : t)),
+        };
+      });
+    } catch (e) {
+      notify((e as Error).message);
+    }
   };
   const policyChange = (key: string, mode: StockMode) =>
     setState((s) => ({
@@ -435,13 +468,7 @@ export default function FamilyApp() {
                 go("Nutrición");
                 setTab("Compras");
               }}
-              onTask={(id, done) =>
-                update({
-                  tasks: state.tasks.map((t) =>
-                    t.id === id ? { ...t, done } : t,
-                  ),
-                })
-              }
+              onTask={setTaskDone}
             />
           )}
           {page === "Nutrición" && (
@@ -992,11 +1019,17 @@ export default function FamilyApp() {
                 state={state}
                 update={update}
                 add={() => open("Nueva tarea")}
+                complete={setTaskDone}
               />
             </>
           )}
           {page === "Casa" && (
             <>
+              <MaintenanceManager
+                state={state}
+                onChange={setState}
+                pending={pending}
+              />
               <div className="toolbar">
                 <h2>Activos de la casa</h2>
                 <button
@@ -1027,16 +1060,30 @@ export default function FamilyApp() {
                       }
                     />
                     <small>
-                      No se generan mantenimientos técnicos sin manual
-                      verificado.
+                      Las intervenciones técnicas requieren un manual o ficha
+                      verificada.
                     </small>
                   </section>
                 ))}
               </div>
               <Tasks
-                state={state}
-                update={update}
+                state={{
+                  ...state,
+                  tasks: state.tasks.filter((t) => !t.maintenance),
+                }}
+                update={(patch) => {
+                  if (patch.tasks)
+                    update({
+                      ...patch,
+                      tasks: [
+                        ...patch.tasks,
+                        ...state.tasks.filter((t) => t.maintenance),
+                      ],
+                    });
+                  else update(patch);
+                }}
                 add={() => open("Nueva tarea")}
+                complete={setTaskDone}
               />
             </>
           )}
@@ -1362,10 +1409,12 @@ function Tasks({
   state,
   update,
   add,
+  complete,
 }: {
   state: State;
   update: (patch: Partial<State>) => void;
   add: () => void;
+  complete: (id: string, done: boolean) => void;
 }) {
   return (
     <section className="panel tasks">
@@ -1381,19 +1430,15 @@ function Tasks({
             type="checkbox"
             aria-label={`Completar ${t.title}`}
             checked={t.done}
-            onChange={() =>
-              update({
-                tasks: state.tasks.map((x) =>
-                  x.id === t.id ? { ...x, done: !x.done } : x,
-                ),
-              })
-            }
+            disabled={!!t.maintenance && t.done}
+            onChange={() => complete(t.id, !t.done)}
           />
           <div>
             <strong className={t.done ? "completed" : ""}>{t.title}</strong>
             <small>
               <select
                 aria-label={`Frecuencia de ${t.title}`}
+                disabled={!!t.maintenance}
                 value={t.frequency}
                 onChange={(e) =>
                   update({
@@ -1418,17 +1463,27 @@ function Tasks({
               · confirmación manual, sin avisos automáticos
             </small>
           </div>
-          <TaskAssignee
-            value={t.assigneeId || ""}
-            onChange={(assigneeId) =>
-              update({
-                tasks: state.tasks.map((x) =>
-                  x.id === t.id ? { ...x, assigneeId } : x,
-                ),
-              })
-            }
-          />
+          {t.dueDate && <small>Programado: {t.dueDate}</small>}
+          {t.instructions && (
+            <details>
+              <summary>Instrucciones de la tarea</summary>
+              <p>{t.instructions}</p>
+            </details>
+          )}
+          {!t.maintenance && (
+            <TaskAssignee
+              value={t.assigneeId || ""}
+              onChange={(assigneeId) =>
+                update({
+                  tasks: state.tasks.map((x) =>
+                    x.id === t.id ? { ...x, assigneeId } : x,
+                  ),
+                })
+              }
+            />
+          )}
           <select
+            disabled={!!t.maintenance}
             aria-label="Responsable"
             value={t.owner}
             onChange={(e) =>

@@ -144,6 +144,8 @@ async function fixture(
             },
           ],
         });
+      if (url.pathname === "/rest/v1/rpc/get_maintenance_tasks")
+        return send([]);
       if (url.pathname === "/rest/v1/household_state") {
         backend.privateReads++;
         return send({ data: backend.state, revision: backend.revision });
@@ -211,9 +213,7 @@ test("login, persistent session, distinct administrators share edits, demo isola
     pb.getByText("Cambio compartido por Juan", { exact: true }),
   ).toBeVisible({ timeout: 15000 });
   await pb.reload();
-  await expect(
-    pb.getByRole("heading", { name: "Hoy en casa" }),
-  ).toBeVisible();
+  await expect(pb.getByRole("heading", { name: "Hoy en casa" })).toBeVisible();
   const before = backend.privateReads;
   await pa.goto("/demo");
   await expect(pa.getByText("DATOS FICTICIOS", { exact: true })).toBeVisible();
@@ -329,4 +329,57 @@ test("principal users can open administration and the API rejects cross-origin i
     data: {},
   });
   expect(denied.status()).toBe(403);
+});
+
+test("administrator imports a prepared maintenance file privately and refuses fabricated history", async ({
+  page,
+  context,
+}) => {
+  const backend = {
+    state: emptyHouseholdState(),
+    revision: 0,
+    privateReads: 0,
+  };
+  await fixture(context, backend);
+  await page.goto("/login");
+  await page.getByLabel("Correo electrónico").fill(users[0].email);
+  await page
+    .getByLabel("Contraseña", { exact: true })
+    .fill("local-fixture-password");
+  await page.getByRole("button", { name: "Entrar a casa" }).click();
+  await page.getByRole("button", { name: "Abrir navegación" }).click();
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Casa", exact: true })
+    .click();
+  const { demoMaintenance } = await import("../../lib/maintenance");
+  const prepared = demoMaintenance();
+  await page
+    .getByLabel("Archivo de mantenimiento preparado")
+    .setInputFiles({
+      name: "invalid.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(
+        JSON.stringify({ ...prepared, history: [{ id: "fabricated" }] }),
+      ),
+    });
+  await expect(page.getByRole("status")).toContainText("No se importó nada");
+  expect(backend.state.maintenance.plans).toHaveLength(0);
+  await page
+    .getByLabel("Archivo de mantenimiento preparado")
+    .setInputFiles({
+      name: "prepared.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(prepared)),
+    });
+  await page
+    .getByRole("button", { name: "Confirmar importación privada" })
+    .click();
+  await expect.poll(() => backend.state.maintenance.plans.length).toBe(8);
+  expect(backend.state.maintenance.history).toHaveLength(0);
+  expect(
+    backend.state.maintenance.plans.every(
+      (p) => p.status === "draft" && p.assigneeId === "",
+    ),
+  ).toBeTruthy();
 });

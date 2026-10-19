@@ -2,6 +2,7 @@ import type { StockPolicies } from "./stock-policy";
 import type { StockMovement } from "./pantry";
 import type { Preparation } from "./meat-shopping";
 import { details } from "./catalog";
+import { emptyMaintenance, type HouseTask } from "./maintenance";
 export type Profile = "Juan" | "Pamela" | "Manuela" | "Juan de Dios";
 export const profiles: Profile[] = [
   "Juan",
@@ -125,7 +126,8 @@ export const initial = {
       assigneeId: "",
       done: false,
     },
-  ],
+  ] as HouseTask[],
+  maintenance: emptyMaintenance(),
   assets: [
     {
       id: "a1",

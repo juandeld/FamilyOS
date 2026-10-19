@@ -21,7 +21,15 @@ type Data = {
     ingredients: { name: string; quantity: number; unit: string }[];
     instructions: string[];
   }[];
-  tasks?: { id: string; title: string; frequency: string; done: boolean }[];
+  tasks?: {
+    id: string;
+    title: string;
+    frequency: string;
+    done: boolean;
+    dueDate?: string;
+    instructions?: string;
+    maintenance?: boolean;
+  }[];
   assets?: { id: string; name: string; detail: string }[];
   stockMovements?: StockMovement[];
   stockPolicies?: StockPolicies;
@@ -31,6 +39,7 @@ export default function CollaboratorWorkspace() {
   const [data, setData] = useState<Data | null>(null),
     [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false);
+  const [maintenanceReady, setMaintenanceReady] = useState(false);
   const can = (p: string) =>
     workspace.membership.permissions.includes(p as never);
   async function load() {
@@ -44,6 +53,34 @@ export default function CollaboratorWorkspace() {
         "No se pudo cargar tu espacio. Revisa tu conexión o pide que verifiquen tu acceso.",
       );
       return;
+    }
+    if (can("tasks.read")) {
+      const projected = await browserSupabase().rpc("get_maintenance_tasks", {
+        hid: workspace.membership.household_id,
+      });
+      if (projected.error || !Array.isArray(projected.data)) {
+        setMaintenanceReady(false);
+        setMessage(
+          "No se pudieron cargar las instrucciones de mantenimiento. Actualiza o pide que revisen el acceso.",
+        );
+      } else if (Array.isArray(projected.data)) {
+        setMaintenanceReady(true);
+        data.tasks = (data.tasks || []).map(
+          (t: NonNullable<Data["tasks"]>[number]) => {
+            const item = projected.data.find(
+              (m: { id: string }) => m.id === t.id,
+            );
+            return item
+              ? {
+                  ...t,
+                  dueDate: item.dueDate,
+                  instructions: item.instructions,
+                  maintenance: true,
+                }
+              : t;
+          },
+        );
+      }
     }
     setData(data);
   }
@@ -149,7 +186,12 @@ export default function CollaboratorWorkspace() {
                 <input
                   type="checkbox"
                   checked={t.done}
-                  disabled={busy || !can("tasks.update")}
+                  disabled={
+                    busy ||
+                    !maintenanceReady ||
+                    !can("tasks.update") ||
+                    (!!t.maintenance && t.done)
+                  }
                   onChange={() =>
                     action("set_my_task_done", {
                       task_id: t.id,
@@ -159,7 +201,18 @@ export default function CollaboratorWorkspace() {
                 />
                 <span>
                   {t.title}
-                  <small>{t.frequency}</small>
+                  <small>
+                    {t.frequency}
+                    {t.dueDate ? ` · ${t.dueDate}` : ""}
+                  </small>
+                  {t.instructions && (
+                    <small className="operational-instructions">
+                      {t.instructions}
+                    </small>
+                  )}
+                  {t.maintenance && t.done && (
+                    <small>Listo · registrado en historial</small>
+                  )}
                 </span>
               </label>
             ))}

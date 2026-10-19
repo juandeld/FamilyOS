@@ -6,13 +6,13 @@ No necesitas compartir contraseñas ni claves por chat ni agregarlas a GitHub.
 
 ## 1. Crear un proyecto Supabase
 
-Abre [Supabase](https://supabase.com/dashboard) y crea un proyecto de producción. Conserva la contraseña de PostgreSQL en tu gestor de contraseñas; la app no necesita esa contraseña en Vercel.
+Abre [Supabase](https://supabase.com/dashboard) y crea un proyecto de producción exclusivo de FamilyOS. No uses el proyecto de otra aplicación. Conserva la contraseña de PostgreSQL en tu gestor de contraseñas; la app no necesita esa contraseña en Vercel.
 
 En Project Settings → API/Data API confirma que `public` está entre los esquemas expuestos. No expongas `auth` ni `pg_catalog`. Obtén la **Project URL**, la clave pública **anon** (o publishable equivalente) y la clave **service_role** desde la sección de claves API. La pública sirve para el navegador con RLS; la service_role solo se usa en el servidor para enviar invitaciones.
 
 ## 2. Crear las tablas, permisos y funciones
 
-En el SQL Editor del proyecto **nuevo**, abre una consulta y pega el contenido completo de [supabase/setup.sql](../supabase/setup.sql). Pulsa Run una sola vez. El archivo incluye las tres migraciones, dentro de una transacción: estructura y RLS, operaciones restringidas, catálogo genérico de recetas ilustrativas. No contiene usuarios, contraseñas ni datos familiares de prueba.
+En el SQL Editor del proyecto **nuevo**, abre una consulta y pega el contenido completo de [supabase/setup.sql](../supabase/setup.sql). Pulsa Run una sola vez. El archivo incluye las cuatro migraciones, dentro de una transacción: estructura y RLS, operaciones restringidas, catálogo genérico de recetas ilustrativas. No contiene usuarios, contraseñas ni datos familiares de prueba.
 
 Alternativa para desarrollo: aplicar por orden `supabase/migrations/*.sql` con Supabase CLI/migraciones. **Usa uno de los dos métodos**, no ambos. Si ya aplicaste la estructura, no repitas el archivo inicial. Las actualizaciones siguientes deben ser nuevas migraciones.
 

@@ -1,5 +1,6 @@
 import './globals.css';
 import './experience.css';
+import './maintenance.css';
 import '@fontsource/cormorant-garamond/latin-300.css';
 import '@fontsource/cormorant-garamond/latin-300-italic.css';
 import '@fontsource/cormorant-garamond/latin-400.css';

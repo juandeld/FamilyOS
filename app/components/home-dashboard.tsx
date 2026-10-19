@@ -158,6 +158,7 @@ export default function HomeDashboard({
                   type="checkbox"
                   aria-label={`Marcar tarea ${t.title}`}
                   checked={t.done}
+                  disabled={!!t.maintenance && t.done}
                   onChange={(e) => onTask(t.id, e.target.checked)}
                 />
                 <span className="task-check" aria-hidden="true">
@@ -167,7 +168,11 @@ export default function HomeDashboard({
                   <strong>{t.title}</strong>
                   <small>
                     {t.owner} ·{" "}
-                    {t.done ? "Listo · toca para deshacer" : t.frequency}
+                    {t.done
+                      ? t.maintenance
+                        ? "Listo · guardado en historial"
+                        : "Listo · toca para deshacer"
+                      : t.frequency}
                   </small>
                 </span>
                 <ChevronRight size={17} />

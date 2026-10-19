@@ -451,6 +451,128 @@ test("PostgreSQL RLS, RPC permissions, private data and cross-admin synchronizat
       assert.ok(children.every((c) => c.user_id === null));
     },
   );
+  await t.test(
+    "maintenance completion is assigned, atomic and private; recurrence helpers cannot be called directly",
+    async () => {
+      await db.query(
+        "update public.household_members set active=true,permissions=array['tasks.read','tasks.update'] where household_id=$1 and user_id=$2",
+        [h1, uid(5)],
+      );
+      const plan = {
+        id: "routine-a",
+        title: "Inspección de ejemplo",
+        area: "Exterior",
+        frequency: "monthly",
+        months: Array.from({ length: 12 }, (_, i) => i + 1),
+        anchorDay: 31,
+        nextDue: "2026-01-31",
+        status: "active",
+        owner: "Equipo",
+        assigneeId: uid(5),
+        instructions: "Inspección accesible",
+        materials: [{ name: "Utensilio", quantity: "1", verified: true }],
+        review: [],
+        references: ["PRIVATE_PROVIDER_REFERENCE"],
+      };
+      const task = {
+        id: "maintenance:routine-a:2026-01-31",
+        title: plan.title,
+        frequency: "Mensual",
+        owner: "Equipo",
+        assigneeId: uid(5),
+        done: false,
+        dueDate: plan.nextDue,
+        instructions: plan.instructions,
+        maintenance: { planId: plan.id, dueDate: plan.nextDue },
+      };
+      await db.query(
+        "update public.household_state set data=$1::jsonb where household_id=$2",
+        [
+          JSON.stringify({
+            ...state,
+            tasks: [task],
+            maintenance: {
+              version: 1,
+              sourceName: "PRIVATE_IMPORT",
+              plans: [plan],
+              history: [],
+              analysis: ["PRIVATE_ANALYSIS"],
+            },
+          }),
+          h1,
+        ],
+      );
+      const dates = await rows(
+        "select public.next_maintenance_due($1::jsonb,'2028-01-31')::text due",
+        [JSON.stringify(plan)],
+      );
+      assert.equal(String(dates[0].due).slice(0, 10), "2028-02-29");
+      await asUser(5, async () => {
+        const data = (
+          await rows("select public.get_maintenance_tasks($1) data", [h1])
+        )[0].data as { id: string; instructions: string }[];
+        assert.equal(data.length, 1);
+        assert.equal(data[0].instructions, plan.instructions);
+        assert.ok(!JSON.stringify(data).includes("PRIVATE_"));
+        await assert.rejects(
+          () => rows("select public.get_maintenance_tasks($1)", [h2]),
+          /Forbidden/,
+        );
+        await assert.rejects(
+          () =>
+            rows(
+              "select public.complete_maintenance_state('{}','{}','x',now())",
+            ),
+          /permission denied/,
+        );
+        await rows("select public.set_my_task_done($1,$2,true)", [h1, task.id]);
+        await rows("select public.set_my_task_done($1,$2,true)", [h1, task.id]);
+        await assert.rejects(
+          () =>
+            rows("select public.set_my_task_done($1,$2,false)", [h1, task.id]),
+          /cannot be undone/,
+        );
+        await assert.rejects(
+          () =>
+            rows("select public.set_my_task_done($1,'unassigned',true)", [h1]),
+          /Forbidden/,
+        );
+      });
+      const doc = (
+        await rows(
+          "select data from public.household_state where household_id=$1",
+          [h1],
+        )
+      )[0].data as {
+        maintenance: {
+          plans: { nextDue: string }[];
+          history: { cost: null; by: string; actorId: string }[];
+        };
+        tasks: { done: boolean }[];
+      };
+      assert.equal(doc.maintenance.history.length, 1);
+      assert.equal(doc.maintenance.history[0].cost, null);
+      assert.equal(doc.maintenance.history[0].by, "Cocina");
+      assert.equal(doc.maintenance.history[0].actorId,uid(5));
+      assert.ok(doc.maintenance.plans[0].nextDue > "2026-01-31");
+      assert.equal(doc.tasks.filter((t) => !t.done).length, 1);
+      await asUser(6, async () =>
+        assert.deepEqual(
+          (await rows("select public.get_maintenance_tasks($1) data", [h1]))[0]
+            .data,
+          [],
+        ),
+      );
+      await asUser(
+        8,
+        async () =>
+          await assert.rejects(
+            () => rows("select public.get_maintenance_tasks($1)", [h1]),
+            /Forbidden/,
+          ),
+      );
+    },
+  );
   await db.exec("set role anon");
   await assert.rejects(
     () => rows("select * from public.household_state"),
