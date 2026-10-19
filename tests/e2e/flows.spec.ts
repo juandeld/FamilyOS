@@ -92,3 +92,31 @@ test('LT Living temporary code opens only the demo and theme persists across nav
    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
  }
 });
+
+test('mobile shortcuts share the same plan and tasks, and the full drawer remains accessible', async ({ page }) => {
+ await page.goto('/demo');
+ await page.getByRole('checkbox', { name: 'Marcar tarea Preparar almuerzo familiar', exact: true }).check();
+ await expect(page.getByRole('checkbox', { name: 'Marcar tarea Preparar almuerzo familiar', exact: true })).toBeChecked();
+ await page.getByRole('button', { name: 'Abrir equipo de casa', exact: true }).click();
+ await expect(page.getByRole('checkbox', { name: 'Completar Preparar almuerzo familiar', exact: true })).toBeChecked();
+ await page.getByRole('button', { name: 'Abrir cocina', exact: true }).click();
+ await expect(page.getByRole('button', { name: 'Elegir', exact: true })).toHaveCount(10);
+ await page.getByRole('button', { name: 'Elegir', exact: true }).first().click();
+ await expect(page.getByRole('progressbar', { name: 'Plan semanal de Juan' })).toHaveAttribute('aria-valuenow', '1');
+ await page.getByRole('button', { name: 'Ir al inicio', exact: true }).click();
+ await expect(page.locator('.week-progress')).toContainText('1');
+ await expect(page.locator('.spotlight-copy')).toContainText('Pollo al limón');
+ await page.getByRole('button', { name: 'Tu próxima compra Carnes para 10, 15 o 30 días' }).click();
+ await expect(page.getByRole('heading', { name: 'Carnes, con un poco de margen.' })).toBeVisible();
+ await page.getByRole('button', { name: 'Ver todos los módulos', exact: true }).click();
+ await expect(page.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible();
+ await page.getByRole('button', { name: 'Cerrar menú', exact: true }).click();
+ await expect(page.getByRole('navigation', { name: 'Navegación principal' })).toBeHidden();
+ await page.getByRole('button', { name: 'Abrir voz simulada', exact: true }).click();
+ await expect(page.getByRole('dialog')).toContainText('No se graba ni transcribe audio.');
+ await page.getByRole('button', { name: 'Cerrar', exact: true }).click();
+ for (const width of [320, 390, 768, 1024, 1440]) {
+   await page.setViewportSize({ width, height: 844 });
+   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+ }
+});

@@ -109,3 +109,7 @@ Pruebas locales de autorización: `npm run test:security`, PostgreSQL real embeb
 La aplicación conserva los datos, claves de almacenamiento, permisos y flujos de FamilyOS. La identidad visual sigue [LT Living](docs/lt-living-brand.md): fuentes Cormorant Garamond Light y Jost autoalojadas, tokens Día/Noche, monograma LT e iconos PWA. El tema se elige desde la cabecera y se conserva como una preferencia visual local.
 
 `/prueba` permite entrar a la demostración con la clave temporal **0000**; `/demo` continúa disponible para los flujos de prueba existentes. Este código es una comodidad de navegación, no autenticación: solo abre datos ficticios locales y no crea sesiones ni llama a Supabase. Las cuentas reales siguen entrando por `/login`, con correo, contraseña y permisos de Supabase. No se redujo la política de contraseñas, ni se crearon contraseñas compartidas para cuentas reales.
+
+## Experiencia de producto
+
+La [dirección de UX/UI actual](docs/product-experience.md) conserva el logo y la paleta, con fotografía ambiental, superficies con profundidad, navegación inferior en móvil y planificación de cocina con progreso por persona. La instrucción posterior del usuario permite apartarse de las restricciones visuales del manual original. Las imágenes son ilustrativas, se sirven localmente y no representan preparaciones confirmadas. No se conectaron servicios nuevos de IA.

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Home,
   Utensils,
@@ -38,6 +38,8 @@ import {
   type Profile,
 } from "../../lib/domain";
 import Brand from "./brand";
+import HomeDashboard from "./home-dashboard";
+import RecipeArt from "./recipe-art";
 import ThemeToggle from "./theme-toggle";
 import { useWorkspace } from "./access-gate";
 import { useHouseholdState } from "../../lib/supabase/use-household-state";
@@ -82,6 +84,47 @@ export default function FamilyApp() {
     [toast, setToast] = useState(""),
     [mobile, setMobile] = useState(false),
     [photo, setPhoto] = useState("");
+  const [clock, setClock] = useState<Date | null>(null);
+  const drawer = useRef<HTMLElement>(null);
+  useEffect(() => {
+    setClock(new Date());
+  }, []);
+  useEffect(() => {
+    if (!mobile) return;
+    const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    document.body.style.overflow = "hidden";
+    const frame = requestAnimationFrame(() =>
+      drawer.current?.querySelector<HTMLButtonElement>("button")?.focus(),
+    );
+    function handleKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMobile(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = drawer.current?.querySelectorAll<HTMLElement>(
+        "a[href], button:not([disabled]), select, input",
+      );
+      if (!items?.length) return;
+      const first = items[0],
+        last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus({ preventScroll: true });
+    };
+  }, [mobile]);
   useEffect(() => {
     if ("serviceWorker" in navigator)
       navigator.serviceWorker.register("/sw.js").catch(() => {});
@@ -97,6 +140,7 @@ export default function FamilyApp() {
   const go = (p: string) => {
     setPage(p);
     setMobile(false);
+    window.scrollTo({ top: 0, behavior: "auto" });
   };
   const notify = (t: string) => setToast(t);
   const open = (m: string) => {
@@ -184,27 +228,52 @@ export default function FamilyApp() {
       </div>
     );
   return (
-    <div className="shell">
-      <aside className={mobile ? "sidebar visible" : "sidebar"}>
+    <div className="shell" data-page={page}>
+      {mobile && (
+        <button
+          className="drawer-scrim"
+          aria-label="Cerrar navegación"
+          onClick={() => setMobile(false)}
+        />
+      )}
+      <aside
+        id="module-menu"
+        ref={drawer}
+        role={mobile ? "dialog" : undefined}
+        aria-modal={mobile ? true : undefined}
+        aria-label="Todos los módulos"
+        className={mobile ? "sidebar visible" : "sidebar"}
+      >
+        <button
+          className="drawer-close icon-button"
+          aria-label="Cerrar menú"
+          onClick={() => setMobile(false)}
+        >
+          <X size={20} />
+        </button>
         <a className="brand" href="#" onClick={() => go("Inicio")}>
           <Brand />
-          <span className="brand-section">LA CASA</span>
+          <span className="brand-section">
+            LIVING<span>LIMA TORALLA</span>
+          </span>
         </a>
         <div className="household">
           <span className="family-avatar">LT</span>
           <div>
             Lima Toralla
             <small>
-              Guatemala <span className="dot" /> {workspace ? "Casa privada" : "Demostración"}
+              Guatemala <span className="dot" />{" "}
+              {workspace ? "Casa privada" : "Demostración"}
             </small>
           </div>
         </div>
         <div className="nav-label">LA CASA, EN CALMA</div>
-        <nav>
+        <nav aria-label="Navegación principal">
           {navigation.map(([name, Icon], i) => (
             <button
               key={name}
               className={page === name ? "nav-item active" : "nav-item"}
+              aria-current={page === name ? "page" : undefined}
               onClick={() => go(name)}
             >
               <Icon size={19} />
@@ -251,6 +320,8 @@ export default function FamilyApp() {
           <button
             className="mobile-menu icon-button"
             aria-label="Abrir navegación"
+            aria-expanded={mobile}
+            aria-controls="module-menu"
             onClick={() => setMobile(!mobile)}
           >
             <Menu />
@@ -263,7 +334,16 @@ export default function FamilyApp() {
             <span className="demo-badge">
               {workspace ? "CASA PRIVADA" : "DATOS FICTICIOS"}
             </span>
-            <span className="location">Guatemala, GT</span>
+            <span className="location">
+              {clock
+                ? new Intl.DateTimeFormat("es-GT", {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                    timeZone: "America/Guatemala",
+                  }).format(clock)
+                : "Guatemala, GT"}
+            </span>
             <span className="avatar small">
               {workspace?.membership.display_name
                 .split(" ")
@@ -315,7 +395,7 @@ export default function FamilyApp() {
             <div>
               <div className="eyebrow">
                 {page === "Inicio"
-                  ? "BUENOS DÍAS"
+                  ? `BIENVENIDO, ${workspace?.membership.display_name.split(" ")[0] || "JUAN"}`
                   : "TODO EN SU LUGAR"}
               </div>
               <h1>
@@ -331,163 +411,62 @@ export default function FamilyApp() {
               </h1>
               <p>
                 {page === "Inicio"
-                  ? "Todo lo que ocurre en casa, anticipado con discreción."
+                  ? "Lo importante, en orden. Tu día, más ligero."
                   : page === "Nutrición"
                     ? "Un menú para cada persona. Una cocina para todos."
                     : "Organiza lo importante con sencillez."}
               </p>
             </div>
             <span className="date-chip">
-              <Calendar size={16} /> Semana de muestra
+              <Calendar size={16} />{" "}
+              {workspace ? "Tu planificación" : "Semana de prueba"}
             </span>
           </div>
-          {page === "Inicio" ? (
-            <>
-              <section className="hero">
-                <div className="hero-copy">
-                  <span className="pill">
-                    <Sparkles size={14} /> PEDIR ALGO
-                  </span>
-                  <h2>La casa, en calma.<br /><em>Tu tiempo, para vivir.</em></h2>
-                  <p>Planea la cocina y coordina al equipo.<br />Empieza por lo que tienes en mente.</p>
-                  <button
-                    className="primary"
-                    onClick={() => open("Voz simulada")}
-                  >
-                    <Mic size={18} /> Hablemos de casa{" "}
-                    <ArrowUpRight size={17} />
-                  </button>
-                  <small>Vista previa de voz · sin micrófono conectado</small>
-                </div>
-                <aside className="home-summary" aria-label="Resumen de la casa">
-                  <span className="eyebrow">EN TU SEMANA</span>
-                  <button onClick={() => go("Nutrición")}><span>Cocina<small>Menús para cada persona</small></span><b>{Object.keys(state.plan).length} platos</b><ChevronRight size={16} /></button>
-                  <button onClick={() => go("Personal")}><span>Equipo de casa<small>Por confirmar</small></span><b>{state.tasks.filter((t) => !t.done).length} tareas</b><ChevronRight size={16} /></button>
-                  <button onClick={() => go("Casa")}><span>Cuidado de la casa<small>Equipos registrados</small></span><b>{state.assets.length} activos</b><ChevronRight size={16} /></button>
-                  <p>Un pendiente menos.<br /><em>Un momento más.</em></p>
-                </aside>
-              </section>
-              <div className="section-title">
-                <h2>Lo esencial</h2>
-                <span>Lo esencial, a la mano</span>
-              </div>
-              <div className="overview-grid">
-                <button
-                  className="overview nutrition-card"
-                  onClick={() => go("Nutrición")}
-                >
-                  <span className="tile-icon sage">
-                    <Utensils />
-                  </span>
-                  <ArrowUpRight className="corner" size={19} />
-                  <small>NUTRICIÓN</small>
-                  <h3>¿Qué vamos a comer?</h3>
-                  <p>
-                    {Object.keys(state.plan).length
-                      ? `${Object.keys(state.plan).length} platos en tu semana`
-                      : "Una semana rica empieza con un plan."}
-                  </p>
-                  <div className="card-footer">
-                    <span className="mini-avatars">J P M J</span>
-                    <span>
-                      Planear menú <ChevronRight size={14} />
-                    </span>
-                  </div>
-                </button>
-                <button className="overview" onClick={() => go("Personal")}>
-                  <span className="tile-icon peach">
-                    <Users />
-                  </span>
-                  <ArrowUpRight className="corner" size={19} />
-                  <small>PERSONAL</small>
-                  <h3>Cada quien, con claridad.</h3>
-                  <p>
-                    {state.tasks.filter((t) => !t.done).length} pendientes
-                    compartidos con el equipo.
-                  </p>
-                  <div className="card-footer">
-                    <span className="status-dot" /> Ver pendientes{" "}
-                    <ChevronRight size={14} />
-                  </div>
-                </button>
-                <button className="overview" onClick={() => go("Casa")}>
-                  <span className="tile-icon lavender">
-                    <Home />
-                  </span>
-                  <ArrowUpRight className="corner" size={19} />
-                  <small>CUIDADO DE LA CASA</small>
-                  <h3>Tu casa, en buenas manos.</h3>
-                  <p>
-                    {state.assets.length} activo registrado. El cuidado empieza
-                    aquí.
-                  </p>
-                  <div className="card-footer">
-                    Revisar mi casa <ChevronRight size={14} />
-                  </div>
-                </button>
-              </div>
-              <div className="bottom-grid">
-                <section className="panel">
-                  <div className="section-title">
-                    <h2>Un vistazo a la semana</h2>
-                    <button
-                      className="text-button"
-                      onClick={() => go("Nutrición")}
-                    >
-                      Ver plan <ArrowUpRight size={15} />
-                    </button>
-                  </div>
-                  {days.slice(0, 3).map((d, i) => (
-                    <div className="agenda-row" key={d}>
-                      <span className="day-block">
-                        {d.slice(0, 3).toUpperCase()}
-                        <b>{i + 1}</b>
-                      </span>
-                      <div>
-                        <strong>
-                          {recipes.find(
-                            (r) =>
-                              r.id === state.plan[slot("Juan", d, "Almuerzo")],
-                          )?.name || "Un espacio para planear"}
-                        </strong>
-                        <small>
-                          Almuerzo · Juan ·{" "}
-                          {state.plan[slot("Juan", d, "Almuerzo")]
-                            ? "Planificado"
-                            : "Sin asignar"}
-                        </small>
-                      </div>
-                      <Utensils size={17} />
-                    </div>
-                  ))}
-                </section>
-                <section className="moment">
-                  <span className="eyebrow">LO QUE DE VERDAD IMPORTA</span>
-                  <h2>
-                    Haz espacio para
-                    <br />
-                    estar juntos.
-                  </h2>
-                  <p>
-                    Los mejores planes no siempre
-                    <br />
-                    están en la lista de pendientes.
-                  </p>
-                  <button
-                    className="text-button"
-                    onClick={() => go("Experiencias")}
-                  >
-                    Explorar en familia <ArrowUpRight size={16} />
-                  </button>
-
-                  <small>Módulo en prototipo</small>
-                </section>
-              </div>
-            </>
-          ) : null}
+          {page === "Inicio" && (
+            <HomeDashboard
+              state={state}
+              go={go}
+              open={open}
+              onPlan={() => {
+                go("Nutrición");
+                setTab("Plan semanal");
+              }}
+              onShop={() => {
+                go("Nutrición");
+                setTab("Compras");
+              }}
+              onTask={(id, done) =>
+                update({
+                  tasks: state.tasks.map((t) =>
+                    t.id === id ? { ...t, done } : t,
+                  ),
+                })
+              }
+            />
+          )}
           {page === "Nutrición" && (
             <>
-              <div className="tabs">
+              <section className="nutrition-intro">
+                <span className="nutrition-intro-icon">
+                  <Utensils size={25} />
+                </span>
+                <div>
+                  <span className="eyebrow">LA COCINA, ORGANIZADA</span>
+                  <h2>Buenos platos. Mejores semanas.</h2>
+                  <p>
+                    {Object.keys(state.plan).length
+                      ? `${Object.keys(state.plan).length} platos elegidos para la familia.`
+                      : "Elige lo que les gusta. Nosotros reunimos los ingredientes."}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setTab("Cocina")}
+                  className="nutrition-intro-button"
+                >
+                  Ver en cocina <ArrowUpRight size={17} />
+                </button>
+              </section>
+              <div className="tabs" aria-label="Secciones de nutrición">
                 {[
                   "Plan semanal",
                   "Cocina",
@@ -500,6 +479,7 @@ export default function FamilyApp() {
                   <button
                     className={tab === t ? "selected" : ""}
                     onClick={() => setTab(t)}
+                    aria-pressed={tab === t}
                     key={t}
                   >
                     {t}
@@ -518,6 +498,7 @@ export default function FamilyApp() {
                     <button
                       className={profile === p ? "profile selected" : "profile"}
                       onClick={() => setProfile(p)}
+                      aria-pressed={profile === p}
                       key={p}
                     >
                       <span className={"profile-face face-" + i}>
@@ -538,9 +519,42 @@ export default function FamilyApp() {
               )}
               {tab === "Plan semanal" && (
                 <>
-                  <div className="toolbar">
+                  <div className="planning-heading">
                     <div>
-                      <h2>Elige algo delicioso para {profile}</h2>
+                      <span className="eyebrow">
+                        EL PLAN DE {profile.toUpperCase()}
+                      </span>
+                      <strong>
+                        {
+                          Object.keys(state.plan).filter((k) =>
+                            k.startsWith(profile + "|"),
+                          ).length
+                        }
+                        <span> / 21 comidas</span>
+                      </strong>
+                    </div>
+                    <div
+                      className="planning-progress"
+                      role="progressbar"
+                      aria-label={`Plan semanal de ${profile}`}
+                      aria-valuenow={
+                        Object.keys(state.plan).filter((k) =>
+                          k.startsWith(profile + "|"),
+                        ).length
+                      }
+                      aria-valuemin={0}
+                      aria-valuemax={21}
+                    >
+                      <span
+                        style={{
+                          width: `${(Object.keys(state.plan).filter((k) => k.startsWith(profile + "|")).length / 21) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="toolbar recipe-toolbar">
+                    <div>
+                      <h2>Algo delicioso para {profile}</h2>
                       <p>
                         10 propuestas por tiempo · ordenadas por gustos y
                         opiniones
@@ -573,6 +587,7 @@ export default function FamilyApp() {
                         key={d}
                         onClick={() => setDay(d)}
                         className={day === d ? "chosen" : ""}
+                        aria-pressed={day === d}
                       >
                         <small>{d.slice(0, 3)}</small>
                         <strong>
@@ -598,11 +613,26 @@ export default function FamilyApp() {
                       state.preferences[profile],
                       state.history,
                     ).map((r, i) => (
-                      <article className="recipe" key={r.id}>
+                      <article
+                        className={
+                          state.plan[slot(profile, day, meal)] === r.id
+                            ? "recipe is-planned"
+                            : "recipe"
+                        }
+                        key={r.id}
+                      >
                         <div className={"food-art food-" + (i % 5)}>
-                          <span className="recipe-number" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-                          <Utensils size={24} aria-hidden="true" />
-                          <small>PROPUESTA DEMO</small>
+                          <RecipeArt variant={i} meal={meal} name={r.name} />
+                          <span className="recipe-meal-tag">
+                            {state.plan[slot(profile, day, meal)] === r.id ? (
+                              <>
+                                <Check size={12} /> En tu {day.toLowerCase()}
+                              </>
+                            ) : (
+                              meal
+                            )}
+                          </span>
+                          <small>ILUSTRACIÓN</small>
                         </div>
                         <div className="recipe-body">
                           <small>
@@ -617,6 +647,9 @@ export default function FamilyApp() {
                           <div className="recipe-actions">
                             <button
                               className="primary compact"
+                              aria-pressed={
+                                state.plan[slot(profile, day, meal)] === r.id
+                              }
                               onClick={() => {
                                 update({
                                   plan: {
@@ -654,7 +687,7 @@ export default function FamilyApp() {
                                 size={18}
                                 fill={
                                   state.favorites.includes(r.id)
-                                    ? "#d7e3d2"
+                                    ? "var(--terracota)"
                                     : "none"
                                 }
                               />
@@ -805,7 +838,12 @@ export default function FamilyApp() {
                       <div className="history-row" key={h.id}>
                         <h3>{h.name}</h3>
                         <small>
-                          {h.person} · {h.preparedAt ? new Date(h.preparedAt).toLocaleString("es-GT",{timeZone:"America/Guatemala"}) : h.date}
+                          {h.person} ·{" "}
+                          {h.preparedAt
+                            ? new Date(h.preparedAt).toLocaleString("es-GT", {
+                                timeZone: "America/Guatemala",
+                              })
+                            : h.date}
                         </small>
                         <input
                           aria-label={`Opinión de ${h.person}`}
@@ -1083,12 +1121,65 @@ export default function FamilyApp() {
           </footer>
         </div>
       </main>
+      <div
+        className="mobile-bottom-nav"
+        role="group"
+        aria-label="Accesos rápidos"
+      >
+        <button
+          aria-label="Ir al inicio"
+          className={page === "Inicio" ? "active" : ""}
+          onClick={() => go("Inicio")}
+        >
+          <Home size={21} />
+          <span>Inicio</span>
+        </button>
+        <button
+          aria-label="Abrir cocina"
+          className={page === "Nutrición" ? "active" : ""}
+          onClick={() => {
+            go("Nutrición");
+            setTab("Plan semanal");
+          }}
+        >
+          <Utensils size={21} />
+          <span>Cocina</span>
+        </button>
+        <button
+          className="bottom-voice"
+          aria-label="Abrir voz simulada"
+          onClick={() => open("Voz simulada")}
+        >
+          <Mic size={24} />
+          <span>Pedir algo</span>
+        </button>
+        <button
+          aria-label="Abrir equipo de casa"
+          className={page === "Personal" ? "active" : ""}
+          onClick={() => go("Personal")}
+        >
+          <Users size={21} />
+          <span>Equipo</span>
+        </button>
+        <button
+          aria-label="Ver todos los módulos"
+          aria-expanded={mobile}
+          aria-controls="module-menu"
+          className={
+            !["Inicio", "Nutrición", "Personal"].includes(page) ? "active" : ""
+          }
+          onClick={() => setMobile(true)}
+        >
+          <Menu size={21} />
+          <span>Más</span>
+        </button>
+      </div>
       <button
-        className="floating-mic"
-        aria-label="Abrir voz simulada"
+        className="desktop-voice"
+        aria-label="Abrir voz simulada en escritorio"
         onClick={() => open("Voz simulada")}
       >
-        <Mic size={24} />
+        <Mic size={19} /> Pedir algo
       </button>
       {toast && (
         <div className="toast" role="status">
