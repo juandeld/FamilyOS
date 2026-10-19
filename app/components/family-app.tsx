@@ -37,6 +37,8 @@ import {
   type State,
   type Profile,
 } from "../../lib/domain";
+import Brand from "./brand";
+import ThemeToggle from "./theme-toggle";
 import { useWorkspace } from "./access-gate";
 import { useHouseholdState } from "../../lib/supabase/use-household-state";
 import { browserSupabase } from "../../lib/supabase/browser";
@@ -170,7 +172,7 @@ export default function FamilyApp() {
   if (!ready)
     return (
       <div className="access-loading">
-        <h1>Cargando tu hogar…</h1>
+        <h1>Cargando tu casa…</h1>
         {syncError && (
           <>
             <p role="alert">{syncError}</p>
@@ -185,21 +187,19 @@ export default function FamilyApp() {
     <div className="shell">
       <aside className={mobile ? "sidebar visible" : "sidebar"}>
         <a className="brand" href="#" onClick={() => go("Inicio")}>
-          <span className="brand-icon">
-            <Home size={23} />
-          </span>
-          Family<span className="brand-os">OS</span>
+          <Brand />
+          <span className="brand-section">LA CASA</span>
         </a>
         <div className="household">
-          <span className="family-avatar">F</span>
+          <span className="family-avatar">LT</span>
           <div>
-            Familia del hogar
+            Lima Toralla
             <small>
-              Guatemala <span className="dot" /> Demo privada
+              Guatemala <span className="dot" /> {workspace ? "Casa privada" : "Demostración"}
             </small>
           </div>
         </div>
-        <div className="nav-label">TU HOGAR, EN ARMONÍA</div>
+        <div className="nav-label">LA CASA, EN CALMA</div>
         <nav>
           {navigation.map(([name, Icon], i) => (
             <button
@@ -256,11 +256,12 @@ export default function FamilyApp() {
             <Menu />
           </button>
           <div className="breadcrumb">
-            Mi hogar <span>/</span> {page}
+            <Brand /> <span className="breadcrumb-section">{page}</span>
           </div>
           <div className="header-right">
+            <ThemeToggle />
             <span className="demo-badge">
-              {workspace ? "HOGAR PRIVADO" : "DATOS FICTICIOS"}
+              {workspace ? "CASA PRIVADA" : "DATOS FICTICIOS"}
             </span>
             <span className="location">Guatemala, GT</span>
             <span className="avatar small">
@@ -314,12 +315,12 @@ export default function FamilyApp() {
             <div>
               <div className="eyebrow">
                 {page === "Inicio"
-                  ? "UN POCO MÁS DE CALMA, CADA DÍA"
-                  : "TU HOGAR, BIEN CUIDADO"}
+                  ? "BUENOS DÍAS"
+                  : "TODO EN SU LUGAR"}
               </div>
               <h1>
                 {page === "Inicio"
-                  ? "Todo en casa, en armonía."
+                  ? "Hoy en casa"
                   : page === "Nutrición"
                     ? "Comer bien, vivir mejor."
                     : page === "Personal"
@@ -330,7 +331,7 @@ export default function FamilyApp() {
               </h1>
               <p>
                 {page === "Inicio"
-                  ? "Menos pendientes en tu mente. Más tiempo para los tuyos."
+                  ? "Todo lo que ocurre en casa, anticipado con discreción."
                   : page === "Nutrición"
                     ? "Un menú para cada persona. Una cocina para todos."
                     : "Organiza lo importante con sencillez."}
@@ -345,57 +346,29 @@ export default function FamilyApp() {
               <section className="hero">
                 <div className="hero-copy">
                   <span className="pill">
-                    <Sparkles size={14} /> TU ASISTENTE DEL HOGAR
+                    <Sparkles size={14} /> PEDIR ALGO
                   </span>
-                  <h2>
-                    Tu hogar tiene mucho
-                    <br />
-                    que decirte.
-                    <br />
-                    <em>Solo tienes que hablar.</em>
-                  </h2>
-                  <p>
-                    Planea la semana, recuerda lo importante y
-                    <br className="desktop" /> coordina tu casa. FamilyOS te
-                    acompaña.
-                  </p>
+                  <h2>La casa, en calma.<br /><em>Tu tiempo, para vivir.</em></h2>
+                  <p>Planea la cocina y coordina al equipo.<br />Empieza por lo que tienes en mente.</p>
                   <button
                     className="primary"
                     onClick={() => open("Voz simulada")}
                   >
-                    <Mic size={18} /> Hablemos de tu hogar{" "}
+                    <Mic size={18} /> Hablemos de casa{" "}
                     <ArrowUpRight size={17} />
                   </button>
                   <small>Vista previa de voz · sin micrófono conectado</small>
                 </div>
-                <div className="hero-art">
-                  <div className="art-sun" />
-                  <div className="vase">
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  <div className="bowl">
-                    <div className="orange" />
-                    <div className="orange second" />
-                    <div className="green-fruit" />
-                  </div>
-                  <div className="art-card">
-                    <span className="round-icon">
-                      <Leaf size={20} />
-                    </span>
-                    <div>
-                      Un hogar que fluye
-                      <small>Un pendiente menos. Un momento más.</small>
-                    </div>
-                    <Check size={16} />
-                  </div>
-                </div>
+                <aside className="home-summary" aria-label="Resumen de la casa">
+                  <span className="eyebrow">EN TU SEMANA</span>
+                  <button onClick={() => go("Nutrición")}><span>Cocina<small>Menús para cada persona</small></span><b>{Object.keys(state.plan).length} platos</b><ChevronRight size={16} /></button>
+                  <button onClick={() => go("Personal")}><span>Equipo de casa<small>Por confirmar</small></span><b>{state.tasks.filter((t) => !t.done).length} tareas</b><ChevronRight size={16} /></button>
+                  <button onClick={() => go("Casa")}><span>Cuidado de la casa<small>Equipos registrados</small></span><b>{state.assets.length} activos</b><ChevronRight size={16} /></button>
+                  <p>Un pendiente menos.<br /><em>Un momento más.</em></p>
+                </aside>
               </section>
               <div className="section-title">
-                <h2>Hoy, en tu hogar</h2>
+                <h2>Lo esencial</h2>
                 <span>Lo esencial, a la mano</span>
               </div>
               <div className="overview-grid">
@@ -506,7 +479,7 @@ export default function FamilyApp() {
                   >
                     Explorar en familia <ArrowUpRight size={16} />
                   </button>
-                  <div className="moment-art">✳</div>
+
                   <small>Módulo en prototipo</small>
                 </section>
               </div>
@@ -627,11 +600,8 @@ export default function FamilyApp() {
                     ).map((r, i) => (
                       <article className="recipe" key={r.id}>
                         <div className={"food-art food-" + (i % 5)}>
-                          <span>
-                            {meal === "Desayuno"
-                              ? ["🍳", "🥣", "🥑", "🍓", "🥬"][i % 5]
-                              : ["🥗", "🍲", "🍛", "🥙", "🌮"][i % 5]}
-                          </span>
+                          <span className="recipe-number" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                          <Utensils size={24} aria-hidden="true" />
                           <small>PROPUESTA DEMO</small>
                         </div>
                         <div className="recipe-body">
@@ -940,7 +910,7 @@ export default function FamilyApp() {
           {page === "Personal" && (
             <>
               <div className="toolbar">
-                <h2>Las personas que cuidan tu hogar</h2>
+                <h2>Las personas que cuidan tu casa</h2>
                 <button
                   className="primary compact"
                   onClick={() => open("Agregar persona")}
@@ -990,7 +960,7 @@ export default function FamilyApp() {
           {page === "Casa" && (
             <>
               <div className="toolbar">
-                <h2>Activos del hogar</h2>
+                <h2>Activos de la casa</h2>
                 <button
                   className="primary compact"
                   onClick={() => open("Agregar activo")}
@@ -1104,10 +1074,10 @@ export default function FamilyApp() {
             </section>
           )}
           <footer>
-            FamilyOS <span>Hecho para vivir mejor, juntos.</span>
+            LT Living <span>Calma · Herencia · Discreción.</span>
             <small>
               {workspace
-                ? "Hogar privado · Supabase"
+                ? "Casa privada · Supabase"
                 : "Demo local · sin conexiones externas"}
             </small>
           </footer>

@@ -109,7 +109,7 @@ export default function AccessGate({ children }: { children: ReactNode }) {
     );
   if (loading)
     return (
-      <div className="access-loading">FamilyOS · Verificando tu hogar…</div>
+      <div className="access-loading">LT Living · Verificando tu casa…</div>
     );
   if (!session) return <AuthScreen />;
   if (!membership)
@@ -118,7 +118,7 @@ export default function AccessGate({ children }: { children: ReactNode }) {
         <h1>Tu cuenta necesita una invitación.</h1>
         <p>
           {error ||
-            "No tienes acceso activo a un hogar. Pide a un administrador que te invite."}
+            "No tienes acceso activo a una casa. Pide a un administrador que te invite."}
         </p>
         <button className="primary" onClick={() => refresh()}>
           Volver a verificar

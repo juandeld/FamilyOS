@@ -1,6 +1,8 @@
 "use client";
+import Brand from "./brand";
+import ThemeToggle from "./theme-toggle";
 import { useEffect, useState } from "react";
-import { Home, LogOut, Check } from "lucide-react";
+import { LogOut, Check } from "lucide-react";
 import { browserSupabase } from "../../lib/supabase/browser";
 import { useWorkspace } from "./access-gate";
 import Pantry from "./pantry";
@@ -64,7 +66,7 @@ export default function CollaboratorWorkspace() {
     setMessage(
       error
         ? "No se pudo confirmar el guardado. Actualiza y revisa el estado antes de repetir."
-        : "Cambio guardado en el hogar.",
+        : "Cambio guardado en la casa.",
     );
     setBusy(false);
     await load();
@@ -72,9 +74,9 @@ export default function CollaboratorWorkspace() {
   return (
     <main className="collaborator-page">
       <header>
+        <ThemeToggle />
         <a href="/" className="brand">
-          <Home size={23} />
-          FamilyOS
+          <Brand />
         </a>
         <button
           className="text-button"
@@ -87,7 +89,7 @@ export default function CollaboratorWorkspace() {
       <div className="content">
         <div className="eyebrow">TU ESPACIO DE TRABAJO</div>
         <h1>Hola, {workspace.membership.display_name}.</h1>
-        <p>Lo que necesitas para cuidar el hogar.</p>
+        <p>Lo que necesitas para cuidar la casa.</p>
         {message && (
           <p role="status" className="notice">
             {message}
@@ -165,7 +167,7 @@ export default function CollaboratorWorkspace() {
         )}
         {data?.assets && (
           <section className="panel">
-            <h2>Activos del hogar</h2>
+            <h2>Activos de la casa</h2>
             {data.assets.map((a) => (
               <Asset
                 key={a.id}

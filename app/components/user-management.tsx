@@ -116,7 +116,7 @@ export default function UserManagement() {
     <>
       <section className="panel">
         <div className="section-title">
-          <h2>Las personas de tu hogar</h2>
+          <h2>Las personas de tu casa</h2>
           <Users size={21} />
         </div>
         <p>

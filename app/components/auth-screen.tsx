@@ -1,11 +1,14 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { Home, ShieldCheck } from "lucide-react";
+import Brand from "./brand";
+import ThemeToggle from "./theme-toggle";
+import { ShieldCheck } from "lucide-react";
 import {
   browserSupabase,
   supabaseConfigured,
 } from "../../lib/supabase/browser";
-export default function AuthScreen() {
+export default function AuthScreen({ demoOnly = false }: { demoOnly?: boolean }) {
+  const [demoCode, setDemoCode] = useState("");
   const [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
     [recovery, setRecovery] = useState(false),
@@ -13,8 +16,13 @@ export default function AuthScreen() {
     [message, setMessage] = useState("");
   async function submit(e: FormEvent) {
     e.preventDefault();
-    setBusy(true);
     setMessage("");
+    if (demoOnly) {
+      if (demoCode !== "0000") { setMessage("La clave temporal es 0000. Inténtalo de nuevo."); return; }
+      window.location.assign("/demo");
+      return;
+    }
+    setBusy(true);
     try {
       if (recovery) {
         const { error } = await browserSupabase().auth.resetPasswordForEmail(
@@ -45,21 +53,25 @@ export default function AuthScreen() {
   }
   return (
     <main className="auth-page">
-      <a href="/" className="brand">
-        <span className="brand-icon">
-          <Home />
-        </span>
-        FamilyOS
-      </a>
+      <div className="auth-tools"><ThemeToggle /></div>
+      <a href="/" className="brand" aria-label="LT Living, inicio"><Brand vertical /></a>
       <section className="auth-card">
-        <span className="eyebrow">TU HOGAR, TU ESPACIO</span>
-        <h1>{recovery ? "Volvamos a tu hogar." : "Bienvenido a casa."}</h1>
+        <span className="eyebrow">LIMA TORALLA</span>
+        <h1>{demoOnly ? "La casa, en calma." : recovery ? "Volvamos a casa." : "Bienvenido a casa."}</h1>
         <p>
-          {recovery
+          {demoOnly ? "Prueba la cocina, las compras y el equipo de casa con datos ficticios." : recovery
             ? "Te enviaremos un enlace seguro."
-            : "Acceso privado para las personas invitadas a tu hogar."}
+            : "Todo lo que ocurre en casa, anticipado con discreción."}
         </p>
-        {!supabaseConfigured ? (
+        {demoOnly ? (
+          <form onSubmit={submit}>
+            <label>Clave de demostración
+              <input type="password" inputMode="numeric" autoComplete="off" maxLength={4} pattern="[0-9]{4}" required value={demoCode} onChange={(e) => setDemoCode(e.target.value)} aria-describedby="demo-code-help" />
+            </label>
+            <p id="demo-code-help" className="demo-code-help">Clave temporal: <strong>0000</strong></p>
+            <button className="primary" type="submit">Entrar a la demostración</button>
+          </form>
+        ) : !supabaseConfigured ? (
           <p className="notice">
             La conexión segura todavía no está configurada. Puedes usar la demo
             con datos ficticios.
@@ -93,12 +105,12 @@ export default function AuthScreen() {
                 ? "Un momento…"
                 : recovery
                   ? "Enviar enlace"
-                  : "Entrar a mi hogar"}
+                  : "Entrar a casa"}
             </button>
           </form>
         )}
         {message && <p role="status">{message}</p>}
-        {supabaseConfigured && (
+        {supabaseConfigured && !demoOnly && (
           <button
             className="text-button"
             onClick={() => {
@@ -111,11 +123,12 @@ export default function AuthScreen() {
         )}
         <div className="privacy">
           <ShieldCheck size={16} />
-          Sin registro público. Solo por invitación.
+          {demoOnly ? "Solo datos ficticios. Esta clave no abre tu cuenta privada." : "Acceso privado. Solo por invitación."}
         </div>
-        <a className="demo-link" href="/demo">
-          Explorar la demo con datos ficticios →
+        <a className="demo-link" href={demoOnly ? "/login" : "/prueba"}>
+          {demoOnly ? "Entrar a mi cuenta privada →" : "Probar con clave temporal 0000 →"}
         </a>
+
       </section>
     </main>
   );

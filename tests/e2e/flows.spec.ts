@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 async function navigate(page:any,name:string){await page.getByRole('button',{name:'Abrir navegación'}).click();await page.getByRole('navigation').getByRole('button',{name,exact:true}).click();}
 test('weekly planning, separate profiles, shopping, recipe and prepared history persist',async({page})=>{
- await page.goto('/demo');await expect(page.getByRole('heading',{name:'Todo en casa, en armonía.'})).toBeVisible();
+ await page.goto('/demo');await expect(page.getByRole('heading',{name:'Hoy en casa'})).toBeVisible();
  await navigate(page,'Nutrición');await expect(page.getByRole('button',{name:'Elegir',exact:true})).toHaveCount(10);
  await page.getByRole('button',{name:'Elegir',exact:true}).first().click();
  await page.getByRole('button',{name:'Pamela Objetivos individuales'}).click();await page.getByRole('button',{name:'Elegir',exact:true}).nth(1).click();
@@ -20,7 +20,7 @@ test('staff notes, routines, assets and simulated capture',async({page})=>{
  await page.getByRole('button',{name:'WhatsApp',exact:true}).click();await page.getByRole('dialog').getByRole('textbox').fill('Hace falta jabón');await page.getByRole('button',{name:'Guardar nota local'}).click();await expect(page.getByText('WhatsApp simulado: Hace falta jabón')).toBeVisible();
  await page.screenshot({path:'/tmp/familyos-mobile.png',fullPage:true});
 });
-test('desktop home and no horizontal mobile overflow',async({page})=>{await page.goto('/demo');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'/tmp/familyos-desktop.png',fullPage:true});await expect(page.getByRole('heading',{name:'Todo en casa, en armonía.'})).toBeVisible();});
+test('desktop home and no horizontal mobile overflow',async({page})=>{await page.goto('/demo');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'/tmp/familyos-desktop.png',fullPage:true});await expect(page.getByRole('heading',{name:'Hoy en casa'})).toBeVisible();});
 test('pantry tracks initial count, purchase and a confirmed recipe without deducting a plan',async({page})=>{
  await page.goto('/demo');await navigate(page,'Inventario');
  await page.getByRole('combobox',{name:'Producto',exact:true}).selectOption('pollo|g');
@@ -54,3 +54,41 @@ test('only selected products are tracked; avocado is always available and meat s
 });
 
 test('authentication links use a no-referrer policy',async({request})=>{const response=await request.get('/auth/confirm');expect(response.headers()['referrer-policy']).toBe('no-referrer');});
+
+test('LT Living temporary code opens only the demo and theme persists across navigation', async ({ page }) => {
+ let authRequests = 0;
+ page.on('request', request => { if (/supabase\..*\/auth\/v1\//.test(request.url())) authRequests++; });
+ await page.goto('/prueba');
+ await expect(page).toHaveTitle('LT Living · La casa, en calma');
+ await page.getByLabel('Clave de demostración').fill('1234');
+ await page.getByRole('button', { name: 'Entrar a la demostración' }).click();
+ await expect(page.getByRole('status')).toContainText('La clave temporal es 0000');
+ await expect(page).toHaveURL(/\/prueba$/);
+ await page.getByRole('button', { name: 'Cambiar a tema Noche' }).click();
+ await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+ await page.reload();
+ await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+ await page.getByLabel('Clave de demostración').fill('0000');
+ await page.getByRole('button', { name: 'Entrar a la demostración' }).click();
+ await expect(page).toHaveURL(/\/demo$/);
+ await expect(page.getByRole('heading', { name: 'Hoy en casa', exact: true })).toBeVisible();
+ await expect(page.getByText('DATOS FICTICIOS', { exact: true })).toBeVisible();
+ await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+ expect(authRequests).toBe(0);
+ await page.evaluate(() => document.fonts.ready);
+ expect(await page.evaluate(() => document.fonts.check('300 26px "Cormorant Garamond"'))).toBeTruthy();
+ expect(await page.evaluate(() => document.fonts.check('300 15px Jost'))).toBeTruthy();
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+ await page.screenshot({ path: '/tmp/lt-living-mobile-night.png', fullPage: true });
+ await navigate(page, 'Nutrición');
+ await expect(page.getByRole('button', { name: 'Elegir', exact: true })).toHaveCount(10);
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+ await page.screenshot({ path: '/tmp/lt-living-nutrition-night.png', fullPage: true });
+ await page.getByRole('button', { name: 'Cambiar a tema Día' }).click();
+ await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+ await page.screenshot({ path: '/tmp/lt-living-nutrition-day.png', fullPage: true, animations: 'disabled' });
+ for (const width of [320, 375, 768, 1024]) {
+   await page.setViewportSize({ width, height: 844 });
+   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+ }
+});

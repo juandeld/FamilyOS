@@ -1,6 +1,6 @@
-# FamilyOS
+# LT Living · FamilyOS
 
-Un hogar en armonía. Aplicación móvil para un hogar en Guatemala, con modo privado Supabase y demo local separada. Next.js App Router, TypeScript, Tailwind CSS 4 y Lucide. Sin variables externas conserva la demo; el modo privado requiere configurar Supabase.
+La casa, en calma. Aplicación móvil para la familia Lima Toralla en Guatemala, con modo privado Supabase y demo local separada. Next.js App Router, TypeScript, Tailwind CSS 4 y Lucide. Sin variables externas conserva la demo; el modo privado requiere configurar Supabase.
 
 ## Ejecutar
 
@@ -103,3 +103,9 @@ La lista semanal también descuenta existencias conocidas por producto/unidad y 
 Consulta [Supabase + Vercel, paso a paso](docs/supabase-vercel.md). Incluye el SQL de instalación, creación de Juan/Pamela por invitación, bloqueo de registro público, SMTP, plantillas de recuperación, las cuatro variables exactas, permisos y pruebas de dos dispositivos. Las migraciones están en `supabase/migrations`; `supabase/setup.sql` es el paquete generado para ejecutar una sola vez en un proyecto nuevo.
 
 Pruebas locales de autorización: `npm run test:security`, PostgreSQL real embebido con RLS (sin credenciales externas). Pruebas de interfaz Auth: `npm run test:auth`, SDK con API HTTP de prueba. Verificación opcional contra Supabase alojado: `npm run test:live`, requiere cuentas de staging y nunca se presenta como aprobada si faltan variables. Salud y documentos siguen sin pantalla de carga; los registros médicos del esquema se deniegan por defecto y exigen permisos explícitos por persona.
+
+## Identidad LT Living y acceso temporal
+
+La aplicación conserva los datos, claves de almacenamiento, permisos y flujos de FamilyOS. La identidad visual sigue [LT Living](docs/lt-living-brand.md): fuentes Cormorant Garamond Light y Jost autoalojadas, tokens Día/Noche, monograma LT e iconos PWA. El tema se elige desde la cabecera y se conserva como una preferencia visual local.
+
+`/prueba` permite entrar a la demostración con la clave temporal **0000**; `/demo` continúa disponible para los flujos de prueba existentes. Este código es una comodidad de navegación, no autenticación: solo abre datos ficticios locales y no crea sesiones ni llama a Supabase. Las cuentas reales siguen entrando por `/login`, con correo, contraseña y permisos de Supabase. No se redujo la política de contraseñas, ni se crearon contraseñas compartidas para cuentas reales.

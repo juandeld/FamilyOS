@@ -186,9 +186,9 @@ test("login, persistent session, distinct administrators share edits, demo isola
     await page
       .getByLabel("Contraseña", { exact: true })
       .fill("Local-fixture-password");
-    await page.getByRole("button", { name: "Entrar a mi hogar" }).click();
+    await page.getByRole("button", { name: "Entrar a casa" }).click();
     await expect(
-      page.getByRole("heading", { name: "Todo en casa, en armonía." }),
+      page.getByRole("heading", { name: "Hoy en casa" }),
     ).toBeVisible();
   }
   await pa.getByRole("button", { name: "Abrir navegación" }).click();
@@ -212,7 +212,7 @@ test("login, persistent session, distinct administrators share edits, demo isola
   ).toBeVisible({ timeout: 15000 });
   await pb.reload();
   await expect(
-    pb.getByRole("heading", { name: "Todo en casa, en armonía." }),
+    pb.getByRole("heading", { name: "Hoy en casa" }),
   ).toBeVisible();
   const before = backend.privateReads;
   await pa.goto("/demo");
@@ -257,7 +257,7 @@ test("recovery request, invitation verification, password form, and no public si
     .fill("Local-fixture-password");
   await page.getByRole("button", { name: "Guardar contraseña" }).click();
   await expect(
-    page.getByRole("heading", { name: "Todo en casa, en armonía." }),
+    page.getByRole("heading", { name: "Hoy en casa" }),
   ).toBeVisible();
   const response = await page.request.post("/api/admin/invitations", {
     headers: { Origin: "http://127.0.0.1:3001" },
@@ -281,7 +281,7 @@ test("collaborator loads only operational data and never requests the private do
   await page
     .getByLabel("Contraseña", { exact: true })
     .fill("Local-fixture-password");
-  await page.getByRole("button", { name: "Entrar a mi hogar" }).click();
+  await page.getByRole("button", { name: "Entrar a casa" }).click();
   await expect(
     page.getByRole("heading", { name: "Hola, Cocina de prueba." }),
   ).toBeVisible();
@@ -313,7 +313,7 @@ test("principal users can open administration and the API rejects cross-origin i
   await page
     .getByLabel("Contraseña", { exact: true })
     .fill("Local-fixture-password");
-  await page.getByRole("button", { name: "Entrar a mi hogar" }).click();
+  await page.getByRole("button", { name: "Entrar a casa" }).click();
   await page.getByRole("button", { name: "Abrir navegación" }).click();
   await page
     .getByRole("button", { name: "Usuarios y permisos", exact: true })

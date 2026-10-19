@@ -25,7 +25,7 @@ export default function Callback() {
   }, []);
   return (
     <div className="access-loading">
-      <h1>Abriendo tu hogar…</h1>
+      <h1>Abriendo tu casa…</h1>
       {error && (
         <>
           <p role="alert">{error}</p>
