@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { State } from "../../lib/domain";
 import { recipes, days, profiles } from "../../lib/domain";
+import {StaffWeek} from "./staff-memory";
 import RecipeArt from "./recipe-art";
 type Props = {
   state: State;
@@ -63,6 +64,7 @@ export default function HomeDashboard({
           </div>
           <span className="feature-footnote">Un espacio para vivir mejor</span>
         </section>
+        <StaffWeek state={state} onOpen={()=>go("Personal")} />
         <section className="voice-dock" aria-label="Pedir algo a LT Living">
           <button className="voice-main" onClick={() => open("Voz simulada")}>
             <span className="voice-icon">

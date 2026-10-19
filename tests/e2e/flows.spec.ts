@@ -171,3 +171,42 @@ test('maintenance review is required before activation and pauses do not fabrica
  expect(saved.tasks.filter((t:any)=>t.maintenance?.planId===saved.maintenance.plans[0].id&&!t.done)).toHaveLength(1);
  expect(saved.maintenance.plans[0].estimatedHours).toBe(1.5);
 });
+
+test('staff memories keep ordinary notes out of calendar and birthdays appear weekly, survive reload and can be corrected',async({page})=>{
+ await page.goto('/demo');await navigate(page,'Personal');
+ const panel=page.getByRole('region',{name:'Memoria del equipo'});
+ await panel.getByLabel('¿Qué quieres recordar?').fill('Prefiere recibir instrucciones la tarde anterior.');
+ await panel.getByRole('button',{name:'Guardar recuerdo',exact:true}).click();
+ await expect(panel.getByText('Solo memoria · sin recordatorio', {exact:true})).toBeVisible();
+ const parts=await page.evaluate(()=>new Intl.DateTimeFormat('es-GT',{timeZone:'America/Guatemala',day:'numeric',month:'long'}).format(new Date()));
+ const note=`Su cumpleaños es el ${parts}.`;
+ await panel.getByLabel('¿Qué quieres recordar?').fill(note);
+ await expect(panel.getByText('Se guardará en el calendario',{exact:true})).toBeVisible();
+ await panel.getByRole('button',{name:'Guardar recuerdo',exact:true}).click();
+ await expect(panel.locator('.memory-calendar')).toContainText(note.slice(0,-1));
+ await navigate(page,'Inicio');await expect(page.locator('.staff-week')).toContainText(note.slice(0,-1));
+ await page.reload();await expect(page.locator('.staff-week')).toContainText(note.slice(0,-1));
+ await navigate(page,'Personal');
+ await panel.getByLabel('Buscar en la memoria').fill('instrucciones');
+ await expect(panel.getByText('Prefiere recibir instrucciones la tarde anterior.',{exact:true})).toBeVisible();
+ await panel.getByLabel('Buscar en la memoria').fill('');
+ await panel.locator('article.memory-entry').filter({hasText:note}).first().getByRole('button',{name:'Editar recuerdo'}).click();
+ await panel.getByLabel('¿Qué quieres recordar?').fill('Le gustan las flores.');
+ await panel.getByRole('button',{name:'Guardar cambios del recuerdo'}).click();
+ await expect(panel.locator('.memory-calendar')).not.toContainText(note.slice(0,-1));
+ await navigate(page,'Inicio');await expect(page.locator('.staff-week')).toHaveCount(0);
+ await navigate(page,'Personal');
+ await panel.getByLabel('¿Qué quieres recordar?').fill('Cumpleaños 5/6.');
+ await expect(panel.getByText('Se guardará en el calendario',{exact:true})).toHaveCount(0);
+ await panel.getByText('Agregar o aclarar una fecha',{exact:true}).click();
+ await panel.getByLabel('Fecha del recuerdo',{exact:true}).fill('2026-06-05');
+ await panel.getByRole('button',{name:'Agregar al recuerdo',exact:true}).click();
+ await panel.getByRole('button',{name:'Guardar recuerdo',exact:true}).click();
+ await panel.getByLabel('Mes del calendario').fill('2027-06');
+ await expect(panel.locator('.memory-calendar')).toContainText('5 de junio de 2027');
+ page.once('dialog',d=>d.accept());
+ await panel.locator('article.memory-entry').filter({hasText:'Cumpleaños 5/6.'}).first().getByRole('button',{name:'Eliminar recuerdo'}).click();
+ await expect(panel.locator('.memory-calendar')).not.toContainText('Cumpleaños 5/6.');
+ await page.screenshot({path:'/tmp/familyos-staff-memory.png',fullPage:true});
+ for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();}
+});

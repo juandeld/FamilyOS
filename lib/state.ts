@@ -17,6 +17,7 @@ export function emptyHouseholdState(): State {
     favorites: [],
     history: [],
     staff: [],
+    staffMemories: [],
     tasks: [],
     assets: [],
     maintenance: structuredClone(initial.maintenance),
@@ -44,7 +45,7 @@ export function mergeStateChanges(
       JSON.stringify(remote[key]) !== JSON.stringify(local[key])
     )
       throw new Error(
-        `Otra persona cambió ${({ plan: "el menú", goals: "los objetivos", notes: "las notas", history: "el historial", staff: "el personal", tasks: "las tareas", maintenance: "el mantenimiento", stockMovements: "la despensa", stockPolicies: "el control de inventario", assets: "los activos", preferences: "las preferencias", favorites: "el recetario", checkedItems: "la lista de compras", purchasePeriod: "el período de compra" } as Record<string, string>)[key] || "esta información"}. Revisa los cambios compartidos antes de volver a guardar.`,
+        `Otra persona cambió ${({ plan: "el menú", goals: "los objetivos", notes: "las notas", history: "el historial", staff: "el personal", staffMemories: "la memoria del personal", tasks: "las tareas", maintenance: "el mantenimiento", stockMovements: "la despensa", stockPolicies: "el control de inventario", assets: "los activos", preferences: "las preferencias", favorites: "el recetario", checkedItems: "la lista de compras", purchasePeriod: "el período de compra" } as Record<string, string>)[key] || "esta información"}. Revisa los cambios compartidos antes de volver a guardar.`,
       );
     Object.assign(merged, { [key]: local[key] });
   }

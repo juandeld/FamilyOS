@@ -39,6 +39,7 @@ import {
 } from "../../lib/domain";
 import Brand from "./brand";
 import HomeDashboard from "./home-dashboard";
+import StaffMemoryPanel from "./staff-memory";
 import MaintenanceManager from "./maintenance-manager";
 import { completeMaintenance } from "../../lib/maintenance";
 import RecipeArt from "./recipe-art";
@@ -983,6 +984,7 @@ export default function FamilyApp() {
                   <Plus size={16} /> Persona
                 </button>
               </div>
+              <StaffMemoryPanel state={state} update={update} />
               <div className="people-grid">
                 {state.staff.map((s) => (
                   <section className="panel" key={s.id}>
@@ -994,24 +996,7 @@ export default function FamilyApp() {
                     </span>
                     <h3>{s.name}</h3>
                     <p>{s.role}</p>
-                    <label>
-                      Memoria y notas
-                      <textarea
-                        value={s.note}
-                        onChange={(e) =>
-                          update({
-                            staff: state.staff.map((x) =>
-                              x.id === s.id
-                                ? { ...x, note: e.target.value }
-                                : x,
-                            ),
-                          })
-                        }
-                      />
-                    </label>
-                    <small>
-                      Datos ficticios · no registrar información sensible.
-                    </small>
+                    <small>Sus recuerdos y fechas están en la memoria del equipo.</small>
                   </section>
                 ))}
               </div>

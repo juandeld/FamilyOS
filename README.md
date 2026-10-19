@@ -117,3 +117,9 @@ La [dirección de UX/UI actual](docs/product-experience.md) conserva el logo y l
 ## Mantenimiento de la casa
 
 [Guía de mantenimiento e importación privada](docs/maintenance.md): plan base, activación explícita, agenda, insumos por validar e historial real. Cada confirmación prepara la siguiente tarea. El ejemplo de la demo es ficticio; no contiene el archivo de la familia. La conexión anterior a Supabase se retiró porque pertenece a otra aplicación: se requiere un proyecto exclusivo para activar el modo privado.
+
+### Memoria del equipo y fechas
+
+En **Personal → La memoria de tu equipo**, guarda recuerdos por persona y búscalos después. Las notas anteriores se conservan y pueden editarse para incorporarlas al nuevo formato. Los recuerdos normales no crean tareas ni eventos. Se extraen fechas españolas explícitas (por ejemplo, «Su cumpleaños es el 12 de mayo») con vista previa antes de guardar; cumpleaños y aniversarios se repiten anualmente. Otras fechas requieren año. Las fechas ambiguas o relativas se aclaran con el selector de fecha, sin inventarlas.
+
+El calendario mensual y el resumen de la semana en Inicio se derivan del mismo recuerdo: editarlo o eliminarlo actualiza ambos. La semana es de lunes a domingo en Guatemala; el 29 de febrero se conserva sin desplazarlo a otra fecha. Los recuerdos son privados de administradores y usan el estado del hogar existente, sin nueva migración. No hay IA, calendario externo, notificaciones push ni envío de mensajes conectados. En demo se guardan localmente; la sincronización privada requiere el proyecto Supabase exclusivo pendiente.

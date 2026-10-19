@@ -1,3 +1,4 @@
+import type { StaffMemory } from "./staff-memory";
 import type { StockPolicies } from "./stock-policy";
 import type { StockMovement } from "./pantry";
 import type { Preparation } from "./meat-shopping";
@@ -95,6 +96,7 @@ export const initial = {
     Juan: { kcal: 2200, protein: 150, carbs: 240, fat: 70 },
     Pamela: { kcal: 1800, protein: 110, carbs: 200, fat: 60 },
   },
+  staffMemories: [] as StaffMemory[],
   staff: [
     {
       id: "s1",

@@ -37,6 +37,7 @@ test("PostgreSQL RLS, RPC permissions, private data and cross-admin synchronizat
     stockPolicies: {},
     staff: [{ note: "PRIVATE_STAFF" }],
     notes: ["PRIVATE_NOTE"],
+    staffMemories: [{id:"memory-private",staffId:"s1",text:"PRIVATE_MEMORY",dates:[{title:"PRIVATE_BIRTHDAY",day:12,month:5,annual:true}]}],
     tasks: [
       { id: "assigned", title: "Mi tarea", assigneeId: uid(5), done: false },
       { id: "other", title: "PRIVATE_TASK", assigneeId: uid(2), done: false },
