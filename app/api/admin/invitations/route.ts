@@ -69,6 +69,9 @@ export async function POST(request: NextRequest) {
       { error: "Solo los administradores pueden invitar." },
       { status: 403 },
     );
+  const permitted = await userClient.rpc("is_household_admin", { hid: body.householdId });
+  if (permitted.error || !permitted.data)
+    return NextResponse.json({ error: "Se requiere una sesión administrativa autorizada." }, { status: 403 });
   const { data: inviteId, error: reserveError } = await userClient.rpc(
     "reserve_household_invitation",
     {

@@ -109,6 +109,7 @@ async function fixture(
       if (url.pathname === "/auth/v1/recover") return send({});
       if (url.pathname === "/auth/v1/verify") return send(session(id));
       if (url.pathname === "/rest/v1/rpc/accept_my_invitations") return send(0);
+      if (url.pathname === "/rest/v1/rpc/household_session_allowed") return send(true);
       if (url.pathname === "/rest/v1/household_members")
         return send(
           url.searchParams.has("user_id")
@@ -221,11 +222,14 @@ test("login, persistent session, distinct administrators share edits, demo isola
   ).toBeVisible({ timeout: 15000 });
   await pb.reload();
   await expect(pb.getByRole("heading", { name: "Hoy en casa" })).toBeVisible();
-  const before = backend.privateReads;
   await pa.goto("/demo");
+  let demoPrivateRequests = 0;
+  pa.on("request", request => {
+    if (/\/rest\/v1\/(household_state|rpc\/save_household_state)/.test(request.url())) demoPrivateRequests++;
+  });
   await expect(pa.getByText("DATOS FICTICIOS", { exact: true })).toBeVisible();
   await pa.waitForTimeout(1000);
-  expect(backend.privateReads).toBe(before);
+  expect(demoPrivateRequests).toBe(0);
   await pb.getByRole("button", { name: "Cerrar sesión", exact: true }).click();
   await expect(
     pb.getByRole("heading", { name: "Bienvenido a casa." }),

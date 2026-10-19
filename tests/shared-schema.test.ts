@@ -86,7 +86,7 @@ test("shared Supabase project preserves the other app and isolates FamilyOS", as
         const tables = await rows<{ relname: string; relrowsecurity: boolean }>(
           "select c.relname,c.relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='familyos' and c.relkind='r' order by c.relname",
         );
-        assert.equal(tables.length, 10);
+        assert.equal(tables.length, 13);
         assert.ok(tables.every((table) => table.relrowsecurity));
         assert.deepEqual(
           (
@@ -391,7 +391,7 @@ test("shared Supabase project preserves the other app and isolates FamilyOS", as
         }>(
           "select p.proname,p.proconfig,pg_get_functiondef(p.oid) definition from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='familyos' order by p.proname",
         );
-        assert.equal(functions.length, 22);
+        assert.equal(functions.length, 30);
         for (const fn of functions) {
           assert.deepEqual(
             fn.proconfig,

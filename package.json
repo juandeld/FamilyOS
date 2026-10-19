@@ -12,7 +12,8 @@
     "test:auth": "playwright test --config=playwright.auth.config.ts",
     "test:security": "tsx --test tests/security.test.ts",
     "supabase:bundle": "tsx scripts/bundle-migrations.ts",
-    "test:live": "node --env-file-if-exists=.env.test.local --import tsx scripts/verify-supabase.ts"
+    "test:live": "node --env-file-if-exists=.env.test.local --import tsx scripts/verify-supabase.ts",
+    "test:managed": "playwright test --config=playwright.managed.config.ts"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.3.0",

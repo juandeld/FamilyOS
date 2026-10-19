@@ -12,7 +12,7 @@ En Project Settings → API/Data API confirma que `public` está entre los esque
 
 ## 2. Crear las tablas, permisos y funciones
 
-En el SQL Editor del proyecto **nuevo**, abre una consulta y pega el contenido completo de [supabase/setup.sql](../supabase/setup.sql). Pulsa Run una sola vez. El archivo incluye las cinco migraciones, dentro de una transacción: estructura y RLS, operaciones restringidas, catálogo genérico de recetas ilustrativas. No contiene usuarios, contraseñas ni datos familiares de prueba.
+En el SQL Editor del proyecto **nuevo**, abre una consulta y pega el contenido completo de [supabase/setup.sql](../supabase/setup.sql). Pulsa Run una sola vez. El archivo incluye las seis migraciones, dentro de una transacción: estructura y RLS, operaciones restringidas, catálogo genérico de recetas ilustrativas. No contiene usuarios, contraseñas ni datos familiares de prueba.
 
 Alternativa para desarrollo: aplicar por orden `supabase/migrations/*.sql` con Supabase CLI/migraciones. **Usa uno de los dos métodos**, no ambos. Si ya aplicaste la estructura, no repitas el archivo inicial. Las actualizaciones siguientes deben ser nuevas migraciones.
 
@@ -182,3 +182,8 @@ La migración `202610190005_sync_conflicts.sql` devuelve `PT409` (HTTP409) para 
 
 
 En instalaciones compartidas, `/auth/callback` también acepta las sesiones en fragmento `#` de las plantillas estándar de Supabase (tipos invite/recovery). Retira el fragmento antes de inicializar el cliente PKCE y verifica la sesión explícitamente; no requiere reemplazar las plantillas globales de la otra aplicación. Los enlaces PKCE y `/auth/confirm` con token hash siguen disponibles.
+
+
+## Acceso administrado sin correo del personal
+
+El modelo Google para administradores y usuario/contraseña para colaboradores se documenta en [docs/managed-access.md](managed-access.md). Requiere la migración006, la aprobación explícita de la cuenta Google y la configuración externa del proveedor. No desactives el acceso existente antes de probar Google realmente; no basta mostrar el botón. Las invitaciones por correo anteriores quedan disponibles como compatibilidad cuando el modo administrado está desactivado.

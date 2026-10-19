@@ -8,6 +8,9 @@ import {
   type Permission,
 } from "../../lib/supabase/access";
 import { useWorkspace } from "./access-gate";
+import ManagedStaff from "./managed-staff";
+const managedAccess =
+  process.env.NEXT_PUBLIC_FAMILYOS_MANAGED_ACCESS === "true";
 type Invite = {
   id: string;
   email: string;
@@ -39,12 +42,14 @@ export default function UserManagement() {
         .select("*")
         .eq("household_id", workspace.membership.household_id)
         .order("display_name"),
-      db
-        .from("household_invitations")
-        .select(
-          "id,email,display_name,permissions,expires_at,accepted_at,revoked_at,delivery_status",
-        )
-        .eq("household_id", workspace.membership.household_id),
+      managedAccess
+        ? Promise.resolve({ data: [], error: null })
+        : db
+            .from("household_invitations")
+            .select(
+              "id,email,display_name,permissions,expires_at,accepted_at,revoked_at,delivery_status",
+            )
+            .eq("household_id", workspace.membership.household_id),
     ]);
     if (m.error || i.error) {
       setMessage("No se pudieron cargar los accesos.");
@@ -120,16 +125,24 @@ export default function UserManagement() {
           <Users size={21} />
         </div>
         <p>
-          Juan y Pamela tienen cuentas independientes e iguales privilegios.
-          Manuela y Juan de Dios son perfiles familiares sin cuenta ni acceso.
+          Los administradores tienen cuentas independientes y controlan los
+          accesos del equipo. Manuela y Juan de Dios son perfiles familiares sin
+          cuenta ni acceso.
         </p>
+        {managedAccess && message && (
+          <p role="status" className="notice">
+            {message}
+          </p>
+        )}
         {members.map((member) => (
           <article className="member-card" key={member.user_id}>
             <div className="member-heading">
               <strong>{member.display_name}</strong>
               <span className="pill">
                 {member.is_principal
-                  ? "Administrador principal"
+                  ? member.active
+                    ? "Administrador principal"
+                    : "Acceso principal desactivado"
                   : member.active
                     ? "Colaborador activo"
                     : "Desactivado"}
@@ -182,135 +195,146 @@ export default function UserManagement() {
           </article>
         ))}
       </section>
-      <section className="panel">
-        <h2>Invitar a un colaborador</h2>
-        <p>
-          Invita solo a la persona que necesita acceso y elige sus permisos.
-          Enviar invitación solicita un correo real a Supabase.
-        </p>
-        <form onSubmit={invite}>
-          <div className="pantry-form">
-            <label>
-              Nombre
-              <input
-                required
-                maxLength={100}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </label>
-            <label>
-              Correo electrónico
-              <input
-                required
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </label>
-          </div>
-          <div className="role-presets">
-            <button
-              type="button"
-              className="text-button"
-              onClick={() =>
-                setPermissions([
-                  "kitchen.read",
-                  "kitchen.confirm",
-                  "tasks.read",
-                  "tasks.update",
-                ])
-              }
-            >
-              Cocina
-            </button>
-            <button
-              type="button"
-              className="text-button"
-              onClick={() =>
-                setPermissions([
-                  "tasks.read",
-                  "tasks.update",
-                  "assets.read",
-                  "assets.write",
-                ])
-              }
-            >
-              Mantenimiento
-            </button>
-            <button
-              type="button"
-              className="text-button"
-              onClick={() => setPermissions(["tasks.read"])}
-            >
-              Personalizar
-            </button>
-          </div>
-          <PermissionFields value={permissions} onChange={setPermissions} />
-          <button className="primary" disabled={busy}>
-            <Plus size={16} />
-            Enviar invitación
-          </button>
-        </form>
-        {message && (
-          <p role="status" className="notice">
-            {message}
-          </p>
-        )}
-      </section>
-      <section className="panel">
-        <h2>Invitaciones</h2>
-        {invites.length === 0 && <p>Aún no hay invitaciones.</p>}
-        {invites.map((i) => (
-          <div className="member-card" key={i.id}>
-            <strong>{i.display_name}</strong>
-            <p>{i.email}</p>
-            <small>
-              {i.accepted_at
-                ? "Aceptada"
-                : i.revoked_at
-                  ? "Revocada"
-                  : new Date(i.expires_at) < new Date()
-                    ? "Vencida"
-                    : i.delivery_status === "sent"
-                      ? "Correo enviado"
-                      : i.delivery_status === "failed"
-                        ? "Envío no confirmado"
-                        : "Envío pendiente"}
-            </small>
-            {!i.accepted_at && !i.revoked_at && (
-              <div>
+      {managedAccess && workspace ? (
+        <ManagedStaff
+          householdId={workspace.membership.household_id}
+          onChanged={load}
+        />
+      ) : (
+        <>
+          <section className="panel">
+            <h2>Invitar a un colaborador</h2>
+            <p>
+              Invita solo a la persona que necesita acceso y elige sus permisos.
+              Enviar invitación solicita un correo real a Supabase.
+            </p>
+            <form onSubmit={invite}>
+              <div className="pantry-form">
+                <label>
+                  Nombre
+                  <input
+                    required
+                    maxLength={100}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Correo electrónico
+                  <input
+                    required
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </label>
+              </div>
+              <div className="role-presets">
                 <button
-                  disabled={busy}
+                  type="button"
                   className="text-button"
-                  onClick={() => invite(undefined, i)}
+                  onClick={() =>
+                    setPermissions([
+                      "kitchen.read",
+                      "kitchen.confirm",
+                      "tasks.read",
+                      "tasks.update",
+                    ])
+                  }
                 >
-                  Reenviar invitación
+                  Cocina
                 </button>
                 <button
-                  disabled={busy}
+                  type="button"
                   className="text-button"
-                  onClick={async () => {
-                    const { error } = await browserSupabase().rpc(
-                      "revoke_household_invitation",
-                      {
-                        hid: workspace!.membership.household_id,
-                        invitation_id: i.id,
-                      },
-                    );
-                    setMessage(
-                      error ? "No se pudo revocar." : "Invitación revocada.",
-                    );
-                    await load();
-                  }}
+                  onClick={() =>
+                    setPermissions([
+                      "tasks.read",
+                      "tasks.update",
+                      "assets.read",
+                      "assets.write",
+                    ])
+                  }
                 >
-                  Revocar invitación
+                  Mantenimiento
+                </button>
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={() => setPermissions(["tasks.read"])}
+                >
+                  Personalizar
                 </button>
               </div>
+              <PermissionFields value={permissions} onChange={setPermissions} />
+              <button className="primary" disabled={busy}>
+                <Plus size={16} />
+                Enviar invitación
+              </button>
+            </form>
+            {message && (
+              <p role="status" className="notice">
+                {message}
+              </p>
             )}
-          </div>
-        ))}
-      </section>
+          </section>
+          <section className="panel">
+            <h2>Invitaciones</h2>
+            {invites.length === 0 && <p>Aún no hay invitaciones.</p>}
+            {invites.map((i) => (
+              <div className="member-card" key={i.id}>
+                <strong>{i.display_name}</strong>
+                <p>{i.email}</p>
+                <small>
+                  {i.accepted_at
+                    ? "Aceptada"
+                    : i.revoked_at
+                      ? "Revocada"
+                      : new Date(i.expires_at) < new Date()
+                        ? "Vencida"
+                        : i.delivery_status === "sent"
+                          ? "Correo enviado"
+                          : i.delivery_status === "failed"
+                            ? "Envío no confirmado"
+                            : "Envío pendiente"}
+                </small>
+                {!i.accepted_at && !i.revoked_at && (
+                  <div>
+                    <button
+                      disabled={busy}
+                      className="text-button"
+                      onClick={() => invite(undefined, i)}
+                    >
+                      Reenviar invitación
+                    </button>
+                    <button
+                      disabled={busy}
+                      className="text-button"
+                      onClick={async () => {
+                        const { error } = await browserSupabase().rpc(
+                          "revoke_household_invitation",
+                          {
+                            hid: workspace!.membership.household_id,
+                            invitation_id: i.id,
+                          },
+                        );
+                        setMessage(
+                          error
+                            ? "No se pudo revocar."
+                            : "Invitación revocada.",
+                        );
+                        await load();
+                      }}
+                    >
+                      Revocar invitación
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </section>
+        </>
+      )}
     </>
   );
 }

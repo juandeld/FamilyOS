@@ -8,3 +8,5 @@ test-results/
 playwright-report/
 .next-auth-test/
 next-env.d.ts
+
+.next-managed-test/

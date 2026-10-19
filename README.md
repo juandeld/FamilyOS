@@ -128,3 +128,8 @@ El calendario mensual y el resumen de la semana en Inicio se derivan del mismo r
 ### Supabase compartido
 
 La instalación en un proyecto existente utiliza `supabase/shared-setup.sql` y `NEXT_PUBLIC_SUPABASE_DB_SCHEMA=familyos`. Las tablas y RPCs de FamilyOS quedan separadas de `public`, con RLS por hogar. Auth y sus cuotas/configuración siguen siendo compartidos. No uses `supabase/setup.sql` sobre la otra aplicación. Instrucciones y pruebas de coexistencia en [la guía de Supabase](docs/supabase-vercel.md#proyecto-compartido-instalación-autorizada).
+
+
+### Acceso administrado del equipo
+
+El modo `NEXT_PUBLIC_FAMILYOS_MANAGED_ACCESS=true` prepara administradores con Google y colaboradores creados con usuario y contraseña, sin correo personal. Conserva el acceso anterior hasta verificar el primer inicio real con Google. Configuración, seguridad y límites en [la guía de acceso administrado](docs/managed-access.md).

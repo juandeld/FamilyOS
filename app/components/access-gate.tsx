@@ -56,6 +56,15 @@ export default function AccessGate({ children }: { children: ReactNode }) {
         .order("household_id")
         .limit(1);
       if (e) throw e;
+      if (data?.[0]) {
+        const permitted = await db.rpc("household_session_allowed", { hid: data[0].household_id });
+        if (permitted.error) throw permitted.error;
+        if (!permitted.data) {
+          setMembership(null);
+          setError("Este acceso necesita una nueva sesión. Entra con Google si administras el hogar, o pide a tu administrador revisar tu acceso.");
+          return;
+        }
+      }
       setMembership(data?.[0] ?? null);
       setError("");
     } catch {
